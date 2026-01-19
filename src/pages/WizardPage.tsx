@@ -10,7 +10,8 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { useJob } from "@/hooks/useJob";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useMessages } from "@/hooks/useMessages";
-import { Photo, ChecklistItem, Message } from "@/types";
+import { useConversationFlow } from "@/hooks/useConversationFlow";
+import { Photo, ChecklistItem, QuickReply, Message } from "@/types";
 
 // In-memory photo storage
 let memoryPhotos: Record<string, Photo[]> = {};
@@ -27,6 +28,27 @@ export default function WizardPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [conversationStarted, setConversationStarted] = useState(false);
+
+  // Handle completing a checklist item
+  const handleCompleteItem = useCallback((itemId: string, data: Record<string, unknown>) => {
+    updateItem(itemId, { status: "COMPLETE", ...data });
+  }, [updateItem]);
+
+  // Conversation flow hook
+  const {
+    quickReplies,
+    isFlowComplete,
+    handleQuickReply,
+    handleChecklistItemClick,
+    startConversation
+  } = useConversationFlow({
+    jobType: currentJob?.jobType || "ELECTRICAL_PANEL",
+    jurisdiction: currentJob?.jurisdiction || "PINELLAS",
+    checklistItems,
+    onAddMessage: addMessage,
+    onCompleteItem: handleCompleteItem
+  });
 
   // Initialize job data
   useEffect(() => {
@@ -46,21 +68,19 @@ export default function WizardPage() {
       
       await fetchMessages();
       setPhotos(memoryPhotos[jobId] || []);
-      
-      // Add welcome message if no messages
-      const existingMessages = await fetchMessages();
-      if (existingMessages.length === 0) {
-        await addMessage(
-          `Welcome! I'll help you document this ${job.jobType.replace("_", " ").toLowerCase()} permit for ${job.jurisdiction === "PINELLAS" ? "Pinellas County" : "City of Tampa"}. Upload a photo or let me know what you need help with!`,
-          "assistant"
-        );
-      }
-      
       setInitialized(true);
     };
     
     init();
   }, [jobId]);
+
+  // Start conversation flow after initialization
+  useEffect(() => {
+    if (initialized && currentJob && checklistItems.length > 0 && !conversationStarted && messages.length === 0) {
+      setConversationStarted(true);
+      startConversation();
+    }
+  }, [initialized, currentJob, checklistItems, conversationStarted, messages.length, startConversation]);
 
   const handleSendMessage = useCallback(async (content: string) => {
     if (!jobId) return;
@@ -68,19 +88,30 @@ export default function WizardPage() {
     await addMessage(content, "user");
     setIsAiLoading(true);
     
-    // Simulate AI response (in production, this would call OpenAI)
+    // Simulate AI response for free-form text (in production, this would call OpenAI)
     setTimeout(async () => {
       const responses = [
-        "I understand. Can you tell me more about the current panel specifications?",
-        "That's helpful! Based on your description, you'll need to document the main disconnect location. Do you have a photo of that?",
-        "Great question! For Pinellas County, you'll need to provide a load calculation per NEC Article 220. Would you like me to guide you through that?",
-        "I can see from your photo that this is a 200A panel. Let me update the checklist with that information.",
+        "I see! Let me help you with that. Can you take a photo so I can give you more specific guidance?",
+        "Good question! Based on what you've described, I'd recommend documenting that with a photo. Tap '📷 Add Photo' below.",
+        "That's helpful context! Let's continue with the checklist — I'll use this information when we get to the relevant section.",
       ];
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       await addMessage(randomResponse, "assistant");
       setIsAiLoading(false);
     }, 1500);
   }, [jobId, addMessage]);
+
+  const handleQuickReplySelect = useCallback(async (reply: QuickReply) => {
+    setIsAiLoading(true);
+    await handleQuickReply(reply);
+    setIsAiLoading(false);
+  }, [handleQuickReply]);
+
+  const handleChecklistClick = useCallback(async (item: ChecklistItem) => {
+    setIsAiLoading(true);
+    await handleChecklistItemClick(item);
+    setIsAiLoading(false);
+  }, [handleChecklistItemClick]);
 
   const handleAddPhoto = () => {
     fileInputRef.current?.click();
@@ -105,7 +136,7 @@ export default function WizardPage() {
     memoryPhotos[jobId] = [...(memoryPhotos[jobId] || []), newPhoto];
     
     // Add a message about the photo
-    await addMessage("I've uploaded a photo of the equipment.", "user");
+    await addMessage("📷 I've uploaded a photo", "user");
     setIsAiLoading(true);
     
     // Simulate AI vision analysis
@@ -116,7 +147,11 @@ export default function WizardPage() {
       memoryPhotos[jobId] = (memoryPhotos[jobId] || []).map(p => p.id === newPhoto.id ? updatedPhoto : p);
       
       await addMessage(
-        "I've analyzed your photo. I can see this appears to be electrical equipment. Can you confirm what specific component this shows?",
+        "I can see the equipment in your photo! Here's what I found:\n\n" +
+        "• **Type**: Electrical panel\n" +
+        "• **Brand**: Looks like Square D\n" +
+        "• **Size**: Appears to be 200A main breaker\n\n" +
+        "Does this look right?",
         "assistant"
       );
       setIsAiLoading(false);
@@ -132,11 +167,6 @@ export default function WizardPage() {
     if (!jobId) return;
     setPhotos(prev => prev.filter(p => p.id !== photoId));
     memoryPhotos[jobId] = (memoryPhotos[jobId] || []).filter(p => p.id !== photoId);
-  };
-
-  const handleChecklistItemClick = (item: ChecklistItem) => {
-    // Focus on this item in chat
-    addMessage(`Let's work on: ${item.title}. ${item.description}`, "assistant");
   };
 
   const handlePreview = () => {
@@ -184,6 +214,8 @@ export default function WizardPage() {
             <ChatPanel
               messages={messages}
               onSendMessage={handleSendMessage}
+              onQuickReply={handleQuickReplySelect}
+              quickReplies={quickReplies}
               isLoading={isAiLoading}
             />
           </div>
@@ -192,7 +224,7 @@ export default function WizardPage() {
           <div className="flex-1 min-h-0 md:w-1/2">
             <ChecklistPanel
               items={checklistItems}
-              onItemClick={handleChecklistItemClick}
+              onItemClick={handleChecklistClick}
             />
           </div>
         </div>
