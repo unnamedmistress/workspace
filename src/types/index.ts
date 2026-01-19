@@ -79,3 +79,25 @@ export interface NavItem {
   icon: string;
   path: string;
 }
+
+// Quick Reply Types
+export interface QuickReply {
+  label: string;
+  value: string;
+}
+
+// Conversation Flow Types
+export interface QuestionStep {
+  id: string;
+  intro?: string;
+  question: string;
+  options: QuickReply[];
+  field: string;
+  followUp?: {
+    [value: string]: string;
+  };
+}
+
+export interface ChecklistQuestions {
+  [itemTitle: string]: QuestionStep[];
+}
