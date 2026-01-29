@@ -21,14 +21,14 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Address is required' });
     }
 
-    if (!process.env.GOOGLE_MAPS_API_KEY) {
+    if (!process.env.GOOGLE_PLACES_API_KEY) {
       return res.status(500).json({ 
-        error: 'Google Maps API key not configured',
-        details: 'Please add GOOGLE_MAPS_API_KEY environment variable in Vercel settings'
+        error: 'Google Places API key not configured',
+        details: 'Please add GOOGLE_PLACES_API_KEY environment variable in Vercel settings'
       });
     }
 
-    const locationService = new LocationService(process.env.GOOGLE_MAPS_API_KEY);
+    const locationService = new LocationService(process.env.GOOGLE_PLACES_API_KEY);
     
     const location = await locationService.getLocationDetails(address);
     

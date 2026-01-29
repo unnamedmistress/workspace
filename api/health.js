@@ -3,7 +3,7 @@ module.exports = (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     services: {
-      location: !!process.env.GOOGLE_MAPS_API_KEY,
+      location: !!process.env.GOOGLE_PLACES_API_KEY,
       permit: !!process.env.OPENAI_API_KEY
     }
   });

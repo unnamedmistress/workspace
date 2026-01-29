@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 app.use(express.static('.')); // Serve static files from current directory
 
 // Initialize services
-const locationService = new LocationService(process.env.GOOGLE_MAPS_API_KEY);
+const locationService = new LocationService(process.env.GOOGLE_PLACES_API_KEY);
 const permitService = new PermitService(process.env.OPENAI_API_KEY);
 
 // Health check
@@ -28,7 +28,7 @@ app.get('/api/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     services: {
-      location: !!process.env.GOOGLE_MAPS_API_KEY,
+      location: !!process.env.GOOGLE_PLACES_API_KEY,
       permit: !!process.env.OPENAI_API_KEY
     }
   });
@@ -190,7 +190,7 @@ app.listen(PORT, () => {
   console.log('🚀 PermitPath API Server');
   console.log('========================');
   console.log(`📡 Listening on http://localhost:${PORT}`);
-  console.log(`🗺️  Google Maps API: ${process.env.GOOGLE_MAPS_API_KEY ? '✅ Configured' : '❌ Missing'}`);
+  console.log(`🗺️  Google Places API: ${process.env.GOOGLE_PLACES_API_KEY ? '✅ Configured' : '❌ Missing'}`);
   console.log(`🤖 OpenAI API: ${process.env.OPENAI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
   console.log('');
   console.log('📋 Available endpoints:');
@@ -200,7 +200,7 @@ app.listen(PORT, () => {
   console.log('   POST /api/permit/full');
   console.log('');
   
-  if (!process.env.GOOGLE_MAPS_API_KEY || !process.env.OPENAI_API_KEY) {
+  if (!process.env.GOOGLE_PLACES_API_KEY || !process.env.OPENAI_API_KEY) {
     console.log('⚠️  WARNING: API keys not configured!');
     console.log('   Copy .env.example to .env and add your keys.');
     console.log('');

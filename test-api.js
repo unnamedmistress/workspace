@@ -13,10 +13,10 @@ async function testAPI() {
   // Check environment
   console.log('📋 Environment Check:');
   console.log(`   OpenAI API Key: ${process.env.OPENAI_API_KEY ? '✅ Set' : '❌ Missing'}`);
-  console.log(`   Google Maps Key: ${process.env.GOOGLE_MAPS_API_KEY ? '✅ Set' : '❌ Missing'}`);
+  console.log(`   Google Places Key: ${process.env.GOOGLE_PLACES_API_KEY ? '✅ Set' : '❌ Missing'}`);
   console.log('');
   
-  if (!process.env.OPENAI_API_KEY || !process.env.GOOGLE_MAPS_API_KEY) {
+  if (!process.env.OPENAI_API_KEY || !process.env.GOOGLE_PLACES_API_KEY) {
     console.log('❌ API keys not configured!');
     console.log('   Copy .env.example to .env and add your keys.\n');
     process.exit(1);
@@ -28,7 +28,7 @@ async function testAPI() {
   
   try {
     const LocationService = require('./locationService');
-    const locationService = new LocationService(process.env.GOOGLE_MAPS_API_KEY);
+    const locationService = new LocationService(process.env.GOOGLE_PLACES_API_KEY);
     
     const location = await locationService.getLocationDetails(testAddress);
     console.log(`   ✅ Found: ${location.fullAddress}`);
