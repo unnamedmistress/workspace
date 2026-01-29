@@ -11,6 +11,7 @@ interface ButtonProps {
   className?: string;
   type?: "button" | "submit" | "reset";
   icon?: ReactNode;
+  "aria-label"?: string;
 }
 
 export default function Button({
@@ -23,16 +24,17 @@ export default function Button({
   className = "",
   type = "button",
   icon,
+  "aria-label": ariaLabel,
 }: ButtonProps) {
-  const baseStyles = "inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
+  const baseStyles = "inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none";
   
   const variants = {
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-    outline: "border-2 border-primary text-primary bg-transparent hover:bg-primary/5",
-    ghost: "text-foreground hover:bg-muted",
-    photo: "bg-primary text-primary-foreground hover:bg-primary/90",
-    preview: "bg-accent text-accent-foreground hover:bg-accent/90",
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 focus-visible:ring-secondary",
+    outline: "border-2 border-primary text-primary bg-transparent hover:bg-primary/5 focus-visible:ring-primary",
+    ghost: "text-foreground hover:bg-muted focus-visible:ring-primary",
+    photo: "bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary",
+    preview: "bg-accent text-accent-foreground hover:bg-accent/90 focus-visible:ring-accent",
   };
 
   const sizes = {
@@ -41,17 +43,25 @@ export default function Button({
     lg: "text-lg px-6 py-4",
   };
 
+  const handleClick = () => {
+    // Add haptic feedback
+    navigator.vibrate?.(10);
+    onClick?.();
+  };
+
   return (
     <button
       type={type}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled || loading}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      aria-label={ariaLabel}
+      aria-busy={loading}
     >
       {loading ? (
-        <Loader2 size={18} className="animate-spin" />
+        <Loader2 size={18} className="animate-spin" aria-hidden="true" />
       ) : icon ? (
-        icon
+        <span aria-hidden="true">{icon}</span>
       ) : null}
       {children}
     </button>

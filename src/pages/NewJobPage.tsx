@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Zap, Droplet, Bath, MapPin, Sun, SquareStack, Fence, BatteryCharging, Car, Wrench } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowLeft, Zap, Droplet, Bath, MapPin, Sun, SquareStack, Fence, BatteryCharging, Car } from "lucide-react";
 import PageWrapper from "@/components/layout/PageWrapper";
 import Button from "@/components/shared/Button";
 import { useJob } from "@/hooks/useJob";
-import { useChecklist } from "@/hooks/useChecklist";
 import { JobType, Jurisdiction } from "@/types";
 
 const JOB_TYPES: { type: JobType; label: string; icon: typeof Zap; description: string }[] = [
@@ -26,7 +26,6 @@ const JURISDICTIONS: { code: Jurisdiction; label: string }[] = [
 export default function NewJobPage() {
   const navigate = useNavigate();
   const { createJob, isLoading } = useJob();
-  const { initializeChecklist } = useChecklist("");
   
   const [step, setStep] = useState<"type" | "jurisdiction" | "address">("type");
   const [selectedType, setSelectedType] = useState<JobType | null>(null);
@@ -34,11 +33,21 @@ export default function NewJobPage() {
   const [address, setAddress] = useState("");
 
   const handleTypeSelect = (type: JobType) => {
+    // Add haptic feedback
+    navigator.vibrate?.(10);
     setSelectedType(type);
-    setStep("jurisdiction");
+    
+    // Auto-select jurisdiction if only one option
+    if (JURISDICTIONS.length === 1) {
+      setSelectedJurisdiction(JURISDICTIONS[0].code);
+      setStep("address");
+    } else {
+      setStep("jurisdiction");
+    }
   };
 
   const handleJurisdictionSelect = (code: Jurisdiction) => {
+    navigator.vibrate?.(10);
     setSelectedJurisdiction(code);
     setStep("address");
   };
@@ -48,9 +57,16 @@ export default function NewJobPage() {
     
     try {
       const job = await createJob(selectedType, selectedJurisdiction, address || undefined);
+      const jobTypeLabel = JOB_TYPES.find(t => t.type === selectedType)?.label || selectedType;
+      toast.success("Job created!", {
+        description: `${jobTypeLabel} job is ready to document.`,
+      });
       navigate(`/wizard/${job.id}`);
     } catch (error) {
       console.error("Failed to create job:", error);
+      toast.error("Failed to create job", {
+        description: "Please try again.",
+      });
     }
   };
 
@@ -72,7 +88,7 @@ export default function NewJobPage() {
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="text-sm font-semibold text-foreground">New Job</h1>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {step === "type" && "Step 1: Select job type"}
             {step === "jurisdiction" && "Step 2: Select jurisdiction"}
             {step === "address" && "Step 3: Enter address (optional)"}

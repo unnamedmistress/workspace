@@ -4,6 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
+import { PhotoProvider } from "./context/PhotoContext";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
+import OfflineIndicator from "./components/shared/OfflineIndicator";
 import HomePage from "./pages/HomePage";
 import NewJobPage from "./pages/NewJobPage";
 import WizardPage from "./pages/WizardPage";
@@ -16,26 +19,40 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AppProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/new" element={<NewJobPage />} />
-            <Route path="/wizard/:jobId" element={<WizardPage />} />
-            <Route path="/preview/:jobId" element={<PreviewPage />} />
-            <Route path="/demo" element={<DemoPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <BottomNav />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AppProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AppProvider>
+        <PhotoProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <OfflineIndicator />
+            <BrowserRouter>
+              {/* Skip to main content link for accessibility */}
+              <a 
+                href="#main-content" 
+                className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg"
+              >
+                Skip to main content
+              </a>
+              <main id="main-content">
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/new" element={<NewJobPage />} />
+                  <Route path="/wizard/:jobId" element={<WizardPage />} />
+                  <Route path="/preview/:jobId" element={<PreviewPage />} />
+                  <Route path="/demo" element={<DemoPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <BottomNav />
+            </BrowserRouter>
+          </TooltipProvider>
+        </PhotoProvider>
+      </AppProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
