@@ -48,10 +48,16 @@ module.exports = async (req, res) => {
     
     // Provide specific guidance for common Google API errors
     let details = 'Failed to lookup location';
-    if (error.message.includes('403')) {
+    if (error.message.includes('not activated') || error.message.includes('API is not enabled')) {
+      details = '❌ Google APIs not enabled!\n\n' +
+                'Please enable these APIs in Google Cloud Console:\n' +
+                '1. Geocoding API: https://console.cloud.google.com/apis/library/geocoding-backend.googleapis.com\n' +
+                '2. Places API: https://console.cloud.google.com/apis/library/places-backend.googleapis.com\n\n' +
+                'Click "Enable" on each, then try again.';
+    } else if (error.message.includes('403')) {
       details = 'Google API returned 403. Please ensure:\n' +
                 '1. Geocoding API is enabled in Google Cloud Console\n' +
-                '2. Places API (New) is enabled\n' +
+                '2. Places API is enabled\n' +
                 '3. API key has no IP/referrer restrictions blocking Vercel\n' +
                 '4. Billing is enabled on the Google Cloud project';
     } else if (error.message.includes('429')) {
