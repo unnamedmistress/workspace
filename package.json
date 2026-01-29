@@ -12,11 +12,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.23",
     "axios": "^1.6.0",
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "openai": "^6.17.0"
+    "openai": "^6.17.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.0"
   }
 }

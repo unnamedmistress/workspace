@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { ArrowLeft, FileText, ExternalLink, RotateCcw, CheckCircle2, AlertCircle, BookOpen, Scale, MapPin } from "lucide-react";
 import PageWrapper from "@/components/layout/PageWrapper";
 import Button from "@/components/shared/Button";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { useJob } from "@/hooks/useJob";
 import { useChecklist } from "@/hooks/useChecklist";
+import { usePhotos } from "@/context/PhotoContext";
 import { LEGAL_SOURCES } from "@/data/pinellasLegalSources";
-import { Photo, ChecklistItem, JobType, LegalSource } from "@/types";
-
-// Access shared photo storage
-let memoryPhotos: Record<string, Photo[]> = {};
+import { JobType } from "@/types";
 
 // Permit requirements by job type
 const PERMIT_REQUIREMENTS: Record<JobType, { permits: string[]; inspections: string[]; forms: string[] }> = {
@@ -92,9 +91,10 @@ export default function PreviewPage() {
   
   const { currentJob, getJob, isLoading: jobLoading } = useJob();
   const { items: checklistItems, fetchChecklist } = useChecklist(jobId || "");
+  const { photos } = usePhotos(jobId || "");
   
-  const [photos, setPhotos] = useState<Photo[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [jobNotFound, setJobNotFound] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -102,12 +102,14 @@ export default function PreviewPage() {
     const init = async () => {
       const job = await getJob(jobId);
       if (!job) {
-        navigate("/");
+        setJobNotFound(true);
+        toast.error("Job not found", {
+          description: "This job may have been deleted or the link is invalid.",
+        });
         return;
       }
       
       await fetchChecklist();
-      setPhotos(memoryPhotos[jobId] || []);
       setInitialized(true);
     };
     
@@ -121,10 +123,35 @@ export default function PreviewPage() {
   const completedItems = checklistItems.filter(i => i.status === "COMPLETE");
   const pendingItems = checklistItems.filter(i => i.status !== "COMPLETE");
 
+  // Job not found state
+  if (jobNotFound) {
+    return (
+      <PageWrapper hasBottomNav={false}>
+        <div className="flex flex-col items-center justify-center h-screen-safe px-4">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+              <span className="text-3xl">🔍</span>
+            </div>
+            <h1 className="text-xl font-bold text-foreground">Job Not Found</h1>
+            <p className="text-sm text-muted-foreground">
+              This job may have been deleted or the link is invalid.
+            </p>
+            <button
+              onClick={() => navigate("/")}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              Go Home
+            </button>
+          </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   if (!initialized || jobLoading) {
     return (
       <PageWrapper hasBottomNav={false}>
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center h-screen" aria-busy="true">
           <LoadingSpinner size="lg" text="Loading preview..." />
         </div>
       </PageWrapper>

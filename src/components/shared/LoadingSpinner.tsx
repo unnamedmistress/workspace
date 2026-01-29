@@ -13,13 +13,20 @@ export default function LoadingSpinner({ size = "md", text }: LoadingSpinnerProp
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-3">
+    <div 
+      className="flex flex-col items-center justify-center gap-3"
+      role="status"
+      aria-live="polite"
+    >
       <Loader2 
         size={sizes[size]} 
         className="animate-spin text-primary"
+        aria-hidden="true"
       />
-      {text && (
+      {text ? (
         <p className="text-sm text-muted-foreground">{text}</p>
+      ) : (
+        <span className="sr-only">Loading...</span>
       )}
     </div>
   );

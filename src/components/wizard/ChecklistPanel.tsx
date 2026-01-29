@@ -10,6 +10,12 @@ export default function ChecklistPanel({ items, onItemClick }: ChecklistPanelPro
   const sortedItems = [...items].sort((a, b) => a.order - b.order);
   const completedCount = items.filter((i) => i.status === "COMPLETE").length;
   
+  const handleItemClick = (item: ChecklistItem) => {
+    // Add haptic feedback
+    navigator.vibrate?.(10);
+    onItemClick(item);
+  };
+  
   return (
     <div className="flex flex-col h-full bg-card md:rounded-xl md:border md:border-border overflow-hidden">
       {/* Compact header - hidden on mobile since we have tabs */}
@@ -21,27 +27,33 @@ export default function ChecklistPanel({ items, onItemClick }: ChecklistPanelPro
           </p>
         </div>
         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-xs font-bold text-primary">
+          <span className="text-xs font-bold text-primary" aria-label={`${Math.round((completedCount / items.length) * 100) || 0}% complete`}>
             {Math.round((completedCount / items.length) * 100) || 0}%
           </span>
         </div>
       </div>
       
       {/* Scrollable list */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-        {sortedItems.map((item) => (
+      <div 
+        className="flex-1 overflow-y-auto p-2 space-y-1.5"
+        role="list"
+        aria-label="Permit requirements checklist"
+      >
+        {sortedItems.map((item, index) => (
           <button
             key={item.id}
-            onClick={() => onItemClick(item)}
-            className={`checklist-item w-full text-left ${
+            onClick={() => handleItemClick(item)}
+            className={`checklist-item w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
               item.status === "COMPLETE"
                 ? "checklist-complete"
                 : item.status === "ACTIVE"
                 ? "checklist-active"
                 : "checklist-pending"
             }`}
+            role="listitem"
+            aria-label={`${item.title}, ${item.status === "COMPLETE" ? "completed" : item.status === "ACTIVE" ? "current" : "pending"}`}
           >
-            <div className="flex-shrink-0 mt-0.5">
+            <div className="flex-shrink-0 mt-0.5" aria-hidden="true">
               {item.status === "COMPLETE" ? (
                 <div className="w-4 h-4 rounded-full bg-success flex items-center justify-center">
                   <Check size={10} className="text-success-foreground" />
@@ -61,17 +73,17 @@ export default function ChecklistPanel({ items, onItemClick }: ChecklistPanelPro
               }`}>
                 {item.title}
               </h4>
-              <p className="text-[10px] text-muted-foreground line-clamp-1">
+              <p className="text-xs text-muted-foreground line-clamp-1">
                 {item.description}
               </p>
               {item.value && (
-                <p className="text-[10px] font-medium text-primary mt-0.5 truncate">
+                <p className="text-xs font-medium text-primary mt-0.5 truncate">
                   {item.value}
                 </p>
               )}
             </div>
             
-            <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
+            <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" aria-hidden="true" />
           </button>
         ))}
       </div>

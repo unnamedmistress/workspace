@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import PageWrapper from "@/components/layout/PageWrapper";
 import ProgressHeader from "@/components/layout/ProgressHeader";
 import ChatPanel from "@/components/wizard/ChatPanel";
@@ -7,14 +8,18 @@ import ChecklistPanel from "@/components/wizard/ChecklistPanel";
 import ActionBar from "@/components/wizard/ActionBar";
 import PhotoGallery from "@/components/wizard/PhotoGallery";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { useJob } from "@/hooks/useJob";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useMessages } from "@/hooks/useMessages";
 import { useConversationFlow } from "@/hooks/useConversationFlow";
-import { Photo, ChecklistItem, QuickReply, Message } from "@/types";
+import { usePhotos } from "@/context/PhotoContext";
+import { Photo, ChecklistItem, QuickReply } from "@/types";
 
-// In-memory photo storage
-let memoryPhotos: Record<string, Photo[]> = {};
+// Photo validation constants
+const MAX_PHOTO_SIZE_MB = 10;
+const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
+const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
 
 export default function WizardPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -23,14 +28,17 @@ export default function WizardPage() {
   
   const { currentJob, getJob, isLoading: jobLoading } = useJob();
   const { items: checklistItems, fetchChecklist, initializeChecklist, updateItem, getProgress } = useChecklist(jobId || "");
-  const { messages, fetchMessages, addMessage, isLoading: messagesLoading } = useMessages(jobId || "");
+  const { messages, fetchMessages, addMessage } = useMessages(jobId || "");
+  const { photos, addPhoto, updatePhoto, deletePhoto } = usePhotos(jobId || "");
   
-  const [photos, setPhotos] = useState<Photo[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [conversationStarted, setConversationStarted] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "checklist">("chat");
   const [photosExpanded, setPhotosExpanded] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [jobNotFound, setJobNotFound] = useState(false);
 
   // Handle completing a checklist item
   const handleCompleteItem = useCallback((itemId: string, data: Record<string, unknown>) => {
@@ -59,7 +67,10 @@ export default function WizardPage() {
     const init = async () => {
       const job = await getJob(jobId);
       if (!job) {
-        navigate("/");
+        setJobNotFound(true);
+        toast.error("Job not found", {
+          description: "This job may have been deleted or the link is invalid.",
+        });
         return;
       }
       
@@ -69,7 +80,6 @@ export default function WizardPage() {
       }
       
       await fetchMessages();
-      setPhotos(memoryPhotos[jobId] || []);
       setInitialized(true);
     };
     
@@ -117,27 +127,68 @@ export default function WizardPage() {
   }, [handleChecklistItemClick]);
 
   const handleAddPhoto = () => {
+    // Add haptic feedback
+    navigator.vibrate?.(10);
     fileInputRef.current?.click();
+  };
+
+  const validatePhoto = (file: File): string | null => {
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      return "Please select a valid image file (JPEG, PNG, or WebP)";
+    }
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      return `Photo must be smaller than ${MAX_PHOTO_SIZE_MB}MB`;
+    }
+    return null;
   };
 
   const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !jobId) return;
     
+    // Validate the photo
+    const validationError = validatePhoto(file);
+    if (validationError) {
+      toast.error("Invalid photo", { description: validationError });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+    
     // Create a preview URL
     const url = URL.createObjectURL(file);
+    const photoId = `photo-${Date.now()}`;
     
     const newPhoto: Photo = {
-      id: `photo-${Date.now()}`,
+      id: photoId,
       jobId,
       url,
       uploadedAt: new Date(),
-      status: "PROCESSING",
+      status: "UPLOADING",
     };
     
-    setPhotos(prev => [...prev, newPhoto]);
-    memoryPhotos[jobId] = [...(memoryPhotos[jobId] || []), newPhoto];
+    addPhoto(newPhoto);
+    setUploadProgress(prev => ({ ...prev, [photoId]: 0 }));
     setPhotosExpanded(true); // Show photos when a new one is added
+    
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        const current = prev[photoId] || 0;
+        if (current >= 90) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return { ...prev, [photoId]: current + 10 };
+      });
+    }, 100);
+    
+    // Update status to processing
+    setTimeout(() => {
+      updatePhoto(photoId, { status: "PROCESSING" });
+      setUploadProgress(prev => ({ ...prev, [photoId]: 100 }));
+    }, 1000);
     
     // Add a message about the photo
     await addMessage("📷 I've uploaded a photo", "user");
@@ -146,10 +197,15 @@ export default function WizardPage() {
     
     // Simulate AI vision analysis
     setTimeout(async () => {
+      clearInterval(progressInterval);
+      
       // Update photo status
-      const updatedPhoto = { ...newPhoto, status: "COMPLETE" as const };
-      setPhotos(prev => prev.map(p => p.id === newPhoto.id ? updatedPhoto : p));
-      memoryPhotos[jobId] = (memoryPhotos[jobId] || []).map(p => p.id === newPhoto.id ? updatedPhoto : p);
+      updatePhoto(photoId, { status: "COMPLETE" });
+      setUploadProgress(prev => {
+        const next = { ...prev };
+        delete next[photoId];
+        return next;
+      });
       
       await addMessage(
         "I can see the equipment in your photo! Here's what I found:\n\n" +
@@ -168,10 +224,18 @@ export default function WizardPage() {
     }
   };
 
-  const handleDeletePhoto = (photoId: string) => {
-    if (!jobId) return;
-    setPhotos(prev => prev.filter(p => p.id !== photoId));
-    memoryPhotos[jobId] = (memoryPhotos[jobId] || []).filter(p => p.id !== photoId);
+  const handleDeletePhotoClick = (photoId: string) => {
+    // Add haptic feedback
+    navigator.vibrate?.(10);
+    setPhotoToDelete(photoId);
+  };
+
+  const handleConfirmDeletePhoto = () => {
+    if (photoToDelete) {
+      deletePhoto(photoToDelete);
+      toast.success("Photo deleted");
+      setPhotoToDelete(null);
+    }
   };
 
   const handlePreview = () => {
@@ -181,10 +245,35 @@ export default function WizardPage() {
   const canPreview = checklistItems.some(i => i.status === "COMPLETE");
   const progress = getProgress();
 
+  // Job not found state
+  if (jobNotFound) {
+    return (
+      <PageWrapper hasBottomNav={false}>
+        <div className="flex flex-col items-center justify-center h-screen-safe px-4">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+              <span className="text-3xl">🔍</span>
+            </div>
+            <h1 className="text-xl font-bold text-foreground">Job Not Found</h1>
+            <p className="text-sm text-muted-foreground">
+              This job may have been deleted or the link is invalid.
+            </p>
+            <button
+              onClick={() => navigate("/")}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              Go Home
+            </button>
+          </div>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   if (!initialized || jobLoading) {
     return (
       <PageWrapper hasBottomNav={false}>
-        <div className="flex items-center justify-center h-screen-safe">
+        <div className="flex items-center justify-center h-screen-safe" aria-busy="true">
           <LoadingSpinner size="lg" text="Loading job..." />
         </div>
       </PageWrapper>
@@ -276,7 +365,8 @@ export default function WizardPage() {
           <div className={`overflow-hidden transition-all duration-300 ${photosExpanded ? "max-h-24" : "max-h-0"}`}>
             <PhotoGallery
               photos={photos}
-              onDeletePhoto={handleDeletePhoto}
+              onDeletePhoto={handleDeletePhotoClick}
+              uploadProgress={uploadProgress}
             />
           </div>
         )}
@@ -291,6 +381,18 @@ export default function WizardPage() {
           onTogglePhotos={() => setPhotosExpanded(!photosExpanded)}
         />
       </div>
+
+      {/* Photo Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={!!photoToDelete}
+        onClose={() => setPhotoToDelete(null)}
+        onConfirm={handleConfirmDeletePhoto}
+        title="Delete Photo?"
+        description="This photo will be permanently removed from this job."
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        variant="danger"
+      />
     </PageWrapper>
   );
 }
