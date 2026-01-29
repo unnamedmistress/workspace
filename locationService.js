@@ -3,12 +3,12 @@
  * Provides precise location details for permit queries
  */
 
-const { Client } = require('@googlemaps/google-maps-services-js');
+const axios = require('axios');
 
 class LocationService {
   constructor(apiKey) {
-    this.client = new Client({});
     this.apiKey = apiKey;
+    this.baseUrl = 'https://maps.googleapis.com/maps/api';
   }
 
   /**
@@ -18,24 +18,23 @@ class LocationService {
     try {
       // Step 1: Geocode the address
       console.log('[LocationService] Geocoding address:', address);
-      const geocodeResponse = await this.client.geocode({
-        params: {
-          address: address,
-          key: this.apiKey
-        }
-      });
+      const geocodeUrl = `${this.baseUrl}/geocode/json?address=${encodeURIComponent(address)}&key=${this.apiKey}`;
+      
+      const geocodeResponse = await axios.get(geocodeUrl);
+      const data = geocodeResponse.data;
 
-      console.log('[LocationService] Geocode status:', geocodeResponse.data.status);
+      console.log('[LocationService] Geocode status:', data.status);
 
-      if (geocodeResponse.data.status === 'REQUEST_DENIED') {
-        throw new Error(`Google API request denied: ${geocodeResponse.data.error_message || 'Check API key and enabled APIs'}`);
+      if (data.status === 'REQUEST_DENIED') {
+        console.error('[LocationService] Request denied:', data.error_message);
+        throw new Error(`Google API request denied: ${data.error_message || 'Check API key and enabled APIs'}`);
       }
 
-      if (geocodeResponse.data.results.length === 0) {
-        throw new Error('Address not found');
+      if (data.status !== 'OK' || data.results.length === 0) {
+        throw new Error(`Address not found (status: ${data.status})`);
       }
 
-      const result = geocodeResponse.data.results[0];
+      const result = data.results[0];
       const components = result.address_components;
 
       // Step 2: Extract components
@@ -79,42 +78,26 @@ class LocationService {
       const jurisdiction = location.likelyCityLimits ? location.city : location.county;
       const searchQuery = `building permit office ${jurisdiction} ${location.stateShort}`;
 
-      const searchResponse = await this.client.findPlaceFromText({
-        params: {
-          input: searchQuery,
-          inputtype: 'textquery',
-          fields: [
-            'name',
-            'formatted_address',
-            'geometry',
-            'place_id'
-          ],
-          locationbias: `point:${location.lat},${location.lng}`,
-          key: this.apiKey
-        }
-      });
+      const fields = 'name,formatted_address,geometry,place_id';
+      const searchUrl = `${this.baseUrl}/place/findplacefromtext/json?input=${encodeURIComponent(searchQuery)}&inputtype=textquery&fields=${fields}&locationbias=point:${location.lat},${location.lng}&key=${this.apiKey}`;
+      
+      const searchResponse = await axios.get(searchUrl);
 
-      if (searchResponse.data.candidates.length === 0) {
+      if (searchResponse.data.status !== 'OK' || searchResponse.data.candidates.length === 0) {
         return null;
       }
 
       const office = searchResponse.data.candidates[0];
 
       // Get detailed info (phone, website, hours)
-      const detailsResponse = await this.client.placeDetails({
-        params: {
-          place_id: office.place_id,
-          fields: [
-            'name',
-            'formatted_address',
-            'formatted_phone_number',
-            'website',
-            'opening_hours',
-            'geometry'
-          ],
-          key: this.apiKey
-        }
-      });
+      const detailFields = 'name,formatted_address,formatted_phone_number,website,opening_hours,geometry';
+      const detailsUrl = `${this.baseUrl}/place/details/json?place_id=${office.place_id}&fields=${detailFields}&key=${this.apiKey}`;
+      
+      const detailsResponse = await axios.get(detailsUrl);
+
+      if (detailsResponse.data.status !== 'OK') {
+        return null;
+      }
 
       const details = detailsResponse.data.result;
 
@@ -149,17 +132,13 @@ class LocationService {
 
     try {
       // Search for historic districts nearby
-      const historicSearch = await this.client.findPlaceFromText({
-        params: {
-          input: `historic district ${location.neighborhood || location.city} ${location.stateShort}`,
-          inputtype: 'textquery',
-          fields: ['name', 'geometry', 'types'],
-          locationbias: `point:${location.lat},${location.lng}`,
-          key: this.apiKey
-        }
-      });
+      const query = `historic district ${location.neighborhood || location.city} ${location.stateShort}`;
+      const fields = 'name,geometry,types';
+      const searchUrl = `${this.baseUrl}/place/findplacefromtext/json?input=${encodeURIComponent(query)}&inputtype=textquery&fields=${fields}&locationbias=point:${location.lat},${location.lng}&key=${this.apiKey}`;
+      
+      const historicSearch = await axios.get(searchUrl);
 
-      if (historicSearch.data.candidates.length > 0) {
+      if (historicSearch.data.status === 'OK' && historicSearch.data.candidates.length > 0) {
         const historic = historicSearch.data.candidates[0];
         const distance = this.calculateDistance(
           location.lat,
