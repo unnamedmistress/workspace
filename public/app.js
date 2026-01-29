@@ -1,199 +1,245 @@
-// PermitPath - Simple & Interactive JavaScript
+/**
+ * PermitPath Main Application
+ * Coordinates guided question flow
+ */
 
-let photos = [];
-let projectName = '';
-let messageCount = 0;
+// Application state
+const appState = {
+  location: null,
+  permitOffice: null,
+  specialDistricts: null,
+  sessionId: null,
+  projectType: null
+};
 
-// Show Different Pages
-function showPage(pageName) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
+// API base URL
+const API_BASE = window.location.origin;
+
+// Initialize components when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize global components
+  window.questionRenderer = new QuestionRenderer('question-container');
+  window.resultDisplay = new ResultDisplay('result-container');
+  
+  // Check server health
+  checkServerHealth();
+  
+  // Set up event listeners
+  setupEventListeners();
+});
+
+/**
+ * Check server health on load
+ */
+async function checkServerHealth() {
+  try {
+    const response = await fetch(`${API_BASE}/api/health`);
+    const data = await response.json();
+    console.log('Server status:', data);
+    
+    if (!data.services.location || !data.services.permit) {
+      showError('⚠️ Some API services are not configured. Functionality may be limited.');
+    }
+  } catch (error) {
+    showError('⚠️ Could not connect to server. Please check your connection.');
+    console.error('Health check error:', error);
+  }
+}
+
+/**
+ * Setup event listeners
+ */
+function setupEventListeners() {
+  // Address form submission
+  const addressForm = document.getElementById('address-form');
+  if (addressForm) {
+    addressForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      lookupLocation();
     });
-    
-    // Show requested page
-    const page = document.getElementById(pageName + '-page');
-    if (page) {
-        page.classList.add('active');
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-        
-        // Update chat title if going to chat page
-        if (pageName === 'chat') {
-            projectName = document.getElementById('project-name')?.value || 'Your Project';
-            document.getElementById('chat-title').textContent = `Let's Chat About: ${projectName}`;
-        }
-        
-        // Update report project name
-        if (pageName === 'report') {
-            document.getElementById('report-project-name').textContent = projectName;
-        }
-    }
+  }
 }
 
-// Handle Photo Upload
-function handlePhoto(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            photos.push(e.target.result);
-            displayPhotos();
-        };
-        reader.readAsDataURL(file);
-    }
-}
+/**
+ * Lookup location from address
+ */
+async function lookupLocation() {
+  const address = document.getElementById('address-input')?.value.trim();
+  
+  if (!address) {
+    showError('Please enter an address');
+    return;
+  }
 
-// Display Uploaded Photos
-function displayPhotos() {
-    const previewDiv = document.getElementById('photos-preview');
-    const uploadArea = document.getElementById('photo-area');
-    
-    if (photos.length > 0) {
-        uploadArea.style.display = 'none';
-        previewDiv.style.display = 'grid';
-        
-        previewDiv.innerHTML = photos.map((photo, index) => `
-            <div class="photo-preview">
-                <img src="${photo}" alt="Photo ${index + 1}">
-                <div class="photo-badge">✓ Added</div>
-            </div>
-        `).join('') + `
-            <label class="photo-add-more">
-                <span style="font-size: 2rem;">📸</span>
-                <span>Add More</span>
-                <input 
-                    type="file" 
-                    accept="image/*" 
-                    style="display: none;"
-                    onchange="handlePhoto(event)"
-                />
-            </label>
-        `;
-    }
-}
+  showLoading(true);
+  hideError();
 
-// Enable/Disable Next Button
-document.getElementById('project-name')?.addEventListener('input', function(e) {
-    const nextBtn = document.getElementById('next-btn');
-    if (e.target.value.trim()) {
-        nextBtn.disabled = false;
-    } else {
-        nextBtn.disabled = true;
-    }
-});
-
-// Send Chat Message
-function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    
-    if (message) {
-        addMessage(message, 'user');
-        input.value = '';
-        
-        // Simulate AI response after a short delay
-        setTimeout(() => {
-            const responses = [
-                "Got it! Let me check what permits you need for that...",
-                "Great question! For that type of work, you'll need a permit.",
-                "I can help you with that! Based on what you told me, here's what you need to know...",
-                "Perfect! I've looked into your project. Let me explain what you need..."
-            ];
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            addMessage(randomResponse, 'ai');
-            
-            // Show report button after a few messages
-            messageCount++;
-            if (messageCount >= 2) {
-                document.getElementById('see-report-btn').style.display = 'flex';
-            }
-        }, 1000);
-    }
-}
-
-// Add Message to Chat
-function addMessage(text, from) {
-    const messagesDiv = document.getElementById('chat-messages');
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message message-${from}`;
-    
-    if (from === 'ai') {
-        messageDiv.innerHTML = `
-            <div class="message-avatar">🤖</div>
-            <div class="message-bubble">
-                <p>${text}</p>
-            </div>
-        `;
-    } else {
-        messageDiv.innerHTML = `
-            <div class="message-bubble">
-                <p>${text}</p>
-            </div>
-            <div class="message-avatar">👤</div>
-        `;
-    }
-    
-    messagesDiv.appendChild(messageDiv);
-    
-    // Scroll to bottom
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-// Handle Enter Key in Chat
-function handleChatEnter(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
-    }
-}
-
-// Send Quick Message
-function sendQuickMessage(type) {
-    let message = '';
-    let response = '';
-    
-    if (type === 'cost') {
-        message = 'How much will the permit cost?';
-        response = 'Great question! For a typical plumbing permit in Florida, it usually costs around $150-200. I can get you the exact price in your report!';
-    } else if (type === 'time') {
-        message = 'How long will it take?';
-        response = 'Usually takes 3-5 business days to get approved. Sometimes it can be faster if everything is filled out correctly!';
-    }
-    
-    addMessage(message, 'user');
-    
-    setTimeout(() => {
-        addMessage(response, 'ai');
-        messageCount++;
-        if (messageCount >= 1) {
-            document.getElementById('see-report-btn').style.display = 'flex';
-        }
-    }, 1000);
-}
-
-// Email Report (Demo)
-function emailReport() {
-    alert('📧 Great! We would send this report to your email.\n\n(This is a demo, so no email was actually sent.)');
-}
-
-// Initialize - Show Home Page
-document.addEventListener('DOMContentLoaded', function() {
-    showPage('home');
-});
-
-// Add smooth scroll behavior
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
+  try {
+    const response = await fetch(`${API_BASE}/api/location`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address })
     });
-});
 
-console.log('✨ PermitPath is ready! Super simple and easy to use!');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.details || 'Failed to lookup address');
+    }
+
+    const data = await response.json();
+    appState.location = data.location;
+    appState.permitOffice = data.permitOffice;
+    appState.specialDistricts = data.specialDistricts;
+
+    showLocationConfirmation(data);
+  } catch (error) {
+    showError(error.message || 'Could not find that address. Please check and try again.');
+    console.error('Location lookup error:', error);
+  } finally {
+    showLoading(false);
+  }
+}
+
+/**
+ * Display location confirmation
+ */
+function showLocationConfirmation(data) {
+  const { location, permitOffice, specialDistricts } = data;
+  
+  const jurisdiction = location.likelyCityLimits 
+    ? `${location.city} (city limits)` 
+    : `${location.county} (county)`;
+
+  let html = `
+    <h3>📍 ${location.fullAddress}</h3>
+    <div class="location-details">
+      <p><strong>Jurisdiction:</strong> ${jurisdiction}</p>
+      <p><strong>ZIP Code:</strong> ${location.zipCode}</p>
+    </div>
+  `;
+
+  if (permitOffice) {
+    html += `
+      <div class="permit-office-info">
+        <h4>🏛️ Permit Office:</h4>
+        <p><strong>${permitOffice.name}</strong></p>
+        <p>${permitOffice.address}</p>
+        <p>📞 ${permitOffice.phone}</p>
+        ${permitOffice.website ? `<p><a href="${permitOffice.website}" target="_blank">Visit Website →</a></p>` : ''}
+      </div>
+    `;
+  }
+
+  if (specialDistricts && specialDistricts.length > 0) {
+    html += `
+      <div class="special-districts">
+        <h4>⚠️ Special Districts Detected:</h4>
+        ${specialDistricts.map(d => `
+          <div class="special-district">
+            <strong>${d.name}</strong>
+            <p>${d.note}</p>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  document.getElementById('location-info').innerHTML = html;
+  
+  // Show location step, hide address step
+  document.getElementById('address-step').style.display = 'none';
+  document.getElementById('location-step').style.display = 'block';
+}
+
+/**
+ * Show project type selection
+ */
+function showProjectTypes() {
+  document.getElementById('location-step').style.display = 'none';
+  document.getElementById('project-step').style.display = 'block';
+}
+
+/**
+ * Start guided questions for selected project
+ */
+async function startGuidedQuestions(projectType) {
+  if (!appState.location) {
+    showError('Location is required. Please start over.');
+    return;
+  }
+
+  appState.projectType = projectType;
+  showLoading(true);
+
+  try {
+    const response = await fetch(`${API_BASE}/api/guided-permit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'start',
+        projectType: projectType,
+        location: appState.location
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to start guided questions');
+    }
+
+    const data = await response.json();
+    appState.sessionId = data.sessionId;
+    window.guidedSessionId = data.sessionId;
+
+    // Hide project selection, show question container
+    document.getElementById('project-step').style.display = 'none';
+    document.getElementById('question-container').style.display = 'block';
+
+    // Render first question
+    window.questionRenderer.render(data);
+  } catch (error) {
+    showError('Could not start questions. Please try again.');
+    console.error('Start questions error:', error);
+  } finally {
+    showLoading(false);
+  }
+}
+
+/**
+ * Edit address - start over
+ */
+function editAddress() {
+  document.getElementById('location-step').style.display = 'none';
+  document.getElementById('address-step').style.display = 'block';
+  appState.location = null;
+}
+
+/**
+ * Show loading spinner
+ */
+function showLoading(show = true) {
+  const loading = document.getElementById('loading');
+  if (loading) {
+    loading.style.display = show ? 'block' : 'none';
+  }
+}
+
+/**
+ * Show error message
+ */
+function showError(message) {
+  const errorEl = document.getElementById('error');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+}
+
+/**
+ * Hide error message
+ */
+function hideError() {
+  const errorEl = document.getElementById('error');
+  if (errorEl) {
+    errorEl.style.display = 'none';
+  }
+}
