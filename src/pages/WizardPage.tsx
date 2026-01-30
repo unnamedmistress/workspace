@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import PageWrapper from "@/components/layout/PageWrapper";
 import ProgressHeader from "@/components/layout/ProgressHeader";
 import ChatPanel from "@/components/wizard/ChatPanel";
-import ChecklistPanel from "@/components/wizard/ChecklistPanel";
+// ChecklistPanel removed (chat-only UI)
 import ActionBar from "@/components/wizard/ActionBar";
 import PhotoGallery from "@/components/wizard/PhotoGallery";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
@@ -13,7 +13,7 @@ import { useJob } from "@/hooks/useJob";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useMessages } from "@/hooks/useMessages";
 import { usePhotos } from "@/context/PhotoContext";
-import { Photo, ChecklistItem } from "@/types";
+import { Photo } from "@/types";
 import PhotoGuidelines from "@/components/permit/PhotoGuidelines";
 import { getAiAssistantResponse } from "@/lib/aiAssistant";
 import { db, storage, isFirebaseReady } from "@/config/firebase";
@@ -42,7 +42,7 @@ export default function WizardPage() {
   const [initialized, setInitialized] = useState(false);
   const [messagesLoaded, setMessagesLoaded] = useState(false);
   const startConversationRef = useRef(false);
-  const [activeTab, setActiveTab] = useState<"chat" | "checklist">("chat");
+  // chat-only UI (no tabs)
   const [photosExpanded, setPhotosExpanded] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
@@ -132,11 +132,7 @@ export default function WizardPage() {
     setIsAiLoading(false);
   }, [jobId, addMessage, currentJob, checklistItems]);
 
-  const handleChecklistClick = useCallback(async (item: ChecklistItem) => {
-    await addMessage(`Tell me about: ${item.title}`, "user");
-    await sendAiReply(`Explain the checklist item ${item.title} and what evidence is needed.`);
-    setActiveTab("chat");
-  }, [addMessage, sendAiReply]);
+  // Checklist click removed for chat-only UI
 
   const handleAddPhoto = () => {
     // Add haptic feedback
@@ -262,7 +258,6 @@ export default function WizardPage() {
     // Add a message about the photo
     await addMessage("📷 I've uploaded a photo", "user");
     setIsAiLoading(true);
-    setActiveTab("chat"); // Switch to chat to see AI response
 
     const aiResponse = await getAiAssistantResponse({
       jobType: currentJob?.jobType || "ELECTRICAL_PANEL",
@@ -373,57 +368,14 @@ export default function WizardPage() {
         showMenu
       />
       
-      {/* Mobile Tab Switcher */}
-      <div className="px-3 py-2 bg-card border-b border-border md:hidden">
-        <div className="tab-switcher">
-          <button 
-            className={`tab-button ${activeTab === "chat" ? "active" : ""}`}
-            onClick={() => setActiveTab("chat")}
-          >
-            💬 Chat
-          </button>
-          <button 
-            className={`tab-button ${activeTab === "checklist" ? "active" : ""}`}
-            onClick={() => setActiveTab("checklist")}
-          >
-            ✓ Checklist ({checklistItems.filter(i => i.status === "COMPLETE").length}/{checklistItems.length})
-          </button>
-        </div>
-      </div>
-      
-      {/* Main Content - Flex grow with overflow hidden */}
+      {/* Main Content - Chat only */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        {/* Mobile: Show active tab only */}
-        <div className="h-full md:hidden">
-          {activeTab === "chat" ? (
-            <ChatPanel
-              messages={messages}
-              onSendMessage={handleSendMessage}
-              isLoading={isAiLoading}
-            />
-          ) : (
-            <ChecklistPanel
-              items={checklistItems}
-              onItemClick={handleChecklistClick}
-            />
-          )}
-        </div>
-        
-        {/* Desktop: Show both panels side by side */}
-        <div className="hidden md:flex h-full gap-3 p-3">
-          <div className="flex-1 min-h-0">
-            <ChatPanel
-              messages={messages}
-              onSendMessage={handleSendMessage}
-              isLoading={isAiLoading}
-            />
-          </div>
-          <div className="flex-1 min-h-0">
-            <ChecklistPanel
-              items={checklistItems}
-              onItemClick={handleChecklistClick}
-            />
-          </div>
+        <div className="h-full p-3">
+          <ChatPanel
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            isLoading={isAiLoading}
+          />
         </div>
       </div>
       
