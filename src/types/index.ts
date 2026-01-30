@@ -85,6 +85,7 @@ export interface DetailedScope {
 export interface Job {
   id: string;
   sessionId: string;
+  userId?: string;
   jobType: JobType;
   jurisdiction: Jurisdiction;
   status: JobStatus;

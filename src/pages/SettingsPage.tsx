@@ -3,14 +3,16 @@ import { ExternalLink, AlertTriangle, Check, X } from "lucide-react";
 import PageWrapper from "@/components/layout/PageWrapper";
 import { isFirebaseConfigured, isOpenAIConfigured } from "@/config/env";
 import { clearSessionId, getSessionId } from "@/utils/sessionId";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SettingsPage() {
   const [sessionId] = useState(getSessionId());
+  const { user, signOut } = useAuth();
   const firebaseConfigured = isFirebaseConfigured();
   const openaiConfigured = isOpenAIConfigured();
 
   const handleClearSession = () => {
-    if (confirm("This will clear your session ID and all local data. Continue?")) {
+    if (confirm("This will clear your session ID and local data stored in this browser. Continue?")) {
       clearSessionId();
       localStorage.clear();
       window.location.reload();
@@ -70,6 +72,25 @@ export default function SettingsPage() {
           )}
         </section>
 
+        {/* Account */}
+        <section className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <h2 className="font-semibold text-foreground">Account</h2>
+          </div>
+          <div className="px-4 py-3 space-y-2">
+            <label className="text-sm text-muted-foreground">Signed in as</label>
+            <p className="text-sm text-foreground">{user?.email ?? "Not signed in"}</p>
+            {user && (
+              <button
+                onClick={() => signOut()}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Sign out
+              </button>
+            )}
+          </div>
+        </section>
+
         {/* Session Info */}
         <section className="bg-card rounded-xl border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
@@ -84,7 +105,7 @@ export default function SettingsPage() {
               onClick={handleClearSession}
               className="text-destructive text-sm font-medium hover:underline"
             >
-              Clear Session & Data
+              Clear Session & Local Data
             </button>
           </div>
         </section>
@@ -102,7 +123,7 @@ export default function SettingsPage() {
 {`VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_OPENAI_API_KEY=sk-your_openai_key`}
