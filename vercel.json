@@ -1,5 +1,7 @@
 {
-  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -7,13 +9,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/public/$1"
+      "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  }
+  ]
 }
