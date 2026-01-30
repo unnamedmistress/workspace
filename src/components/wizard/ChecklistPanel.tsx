@@ -1,12 +1,13 @@
-import { Check, Circle, ChevronRight } from "lucide-react";
+import { Check, Circle, ChevronRight, HelpCircle } from "lucide-react";
 import { ChecklistItem } from "@/types";
 
 interface ChecklistPanelProps {
   items: ChecklistItem[];
   onItemClick: (item: ChecklistItem) => void;
+  onTellMeMore?: (item: ChecklistItem) => void;
 }
 
-export default function ChecklistPanel({ items, onItemClick }: ChecklistPanelProps) {
+export default function ChecklistPanel({ items, onItemClick, onTellMeMore }: ChecklistPanelProps) {
   const sortedItems = [...items].sort((a, b) => a.order - b.order);
   const completedCount = items.filter((i) => i.status === "COMPLETE").length;
   
@@ -14,6 +15,12 @@ export default function ChecklistPanel({ items, onItemClick }: ChecklistPanelPro
     // Add haptic feedback
     navigator.vibrate?.(10);
     onItemClick(item);
+  };
+
+  const handleTellMeMore = (e: React.MouseEvent, item: ChecklistItem) => {
+    e.stopPropagation(); // Prevent item click
+    navigator.vibrate?.(10);
+    onTellMeMore?.(item);
   };
   
   return (
@@ -80,6 +87,15 @@ export default function ChecklistPanel({ items, onItemClick }: ChecklistPanelPro
                 <p className="text-xs font-medium text-primary mt-0.5 truncate">
                   {item.value}
                 </p>
+              )}
+              {onTellMeMore && item.status !== "COMPLETE" && (
+                <button
+                  onClick={(e) => handleTellMeMore(e, item)}
+                  className="mt-1 text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  <HelpCircle size={12} />
+                  Tell me more
+                </button>
               )}
             </div>
             

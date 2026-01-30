@@ -288,3 +288,59 @@
 .zoom-in-95 {
   animation-name: zoom-in-95;
 }
+/* Print Styles */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+  
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  /* Hide navigation elements */
+  header, nav, .safe-area-inset-top, .safe-area-inset-bottom {
+    display: none !important;
+  }
+  
+  /* Ensure page breaks work nicely */
+  section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Make sure text is readable */
+  * {
+    color: black !important;
+    background: white !important;
+  }
+  
+  /* Keep borders visible */
+  .border, .border-border {
+    border-color: #ccc !important;
+  }
+  
+  /* Keep success/warning colors for checkmarks */
+  .bg-success, .text-success {
+    background-color: #22c55e !important;
+    color: #22c55e !important;
+  }
+  
+  .bg-primary, .text-primary {
+    background-color: #2563eb !important;
+    color: #2563eb !important;
+  }
+  
+  /* Photo grid for print */
+  img {
+    max-width: 100%;
+    height: auto;
+    page-break-inside: avoid;
+  }
+}

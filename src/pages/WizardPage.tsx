@@ -52,6 +52,7 @@ export default function WizardPage() {
     isFlowComplete,
     handleQuickReply,
     handleChecklistItemClick,
+    handleTellMeMore,
     startConversation
   } = useConversationFlow({
     jobType: currentJob?.jobType || "ELECTRICAL_PANEL",
@@ -341,6 +342,10 @@ export default function WizardPage() {
             <ChecklistPanel
               items={checklistItems}
               onItemClick={handleChecklistClick}
+              onTellMeMore={(item) => {
+                handleTellMeMore(item);
+                setActiveTab("chat"); // Switch to chat when clicking Tell Me More
+              }}
             />
           )}
         </div>
@@ -360,6 +365,7 @@ export default function WizardPage() {
             <ChecklistPanel
               items={checklistItems}
               onItemClick={handleChecklistClick}
+              onTellMeMore={handleTellMeMore}
             />
           </div>
         </div>

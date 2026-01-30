@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { QuickReply, ChecklistItem, Message } from "@/types";
 import { getQuestionsForItem, getFirstIncompleteQuestions } from "@/data/checklistQuestions";
+import { formatPhotoRequirementsMessage, getPhotoRequirements } from "@/data/photoRequirements";
 
 interface ConversationState {
   activeItemTitle: string | null;
@@ -8,6 +9,10 @@ interface ConversationState {
   answers: Record<string, string>;
   quickReplies: QuickReply[];
   isComplete: boolean;
+  pendingCompletion: {
+    itemTitle: string;
+    answers: Record<string, string>;
+  } | null;
 }
 
 interface UseConversationFlowProps {
@@ -30,7 +35,8 @@ export function useConversationFlow({
     questionIndex: 0,
     answers: {},
     quickReplies: [],
-    isComplete: false
+    isComplete: false,
+    pendingCompletion: null
   });
 
   // Start the conversation with a welcome message
@@ -65,7 +71,8 @@ export function useConversationFlow({
           { label: "Yes, let's go! ✨", value: "start" },
           { label: "📷 Upload a photo first", value: "photo" }
         ],
-        isComplete: false
+        isComplete: false,
+        pendingCompletion: null
       });
     } else {
       // No questions defined for this job type yet - provide photo-based workflow
@@ -83,7 +90,8 @@ export function useConversationFlow({
           { label: "📷 Add Photo", value: "photo" },
           { label: "Tell me more", value: "explain" }
         ],
-        isComplete: false
+        isComplete: false,
+        pendingCompletion: null
       });
     }
   }, [jobType, jurisdiction, checklistItems, onAddMessage]);
@@ -119,7 +127,8 @@ export function useConversationFlow({
       questionIndex: 0,
       answers: {},
       quickReplies: firstQuestion.options,
-      isComplete: false
+      isComplete: false,
+      pendingCompletion: null
     });
   }, [jobType, jurisdiction, onAddMessage]);
 
@@ -127,6 +136,21 @@ export function useConversationFlow({
   const handleQuickReply = useCallback(async (reply: QuickReply) => {
     // Add user's selection as a message
     await onAddMessage(reply.label, "user");
+
+    // Handle confirmation
+    if (reply.value === "confirm_complete") {
+      await completeCurrentItem();
+      return;
+    }
+
+    if (reply.value === "edit_answers") {
+      await onAddMessage(
+        "No problem! What would you like to change? Just type the corrected information.",
+        "assistant"
+      );
+      setState(prev => ({ ...prev, quickReplies: [], pendingCompletion: null }));
+      return;
+    }
 
     // Handle special values
     if (reply.value === "start") {
@@ -138,8 +162,21 @@ export function useConversationFlow({
     }
 
     if (reply.value === "photo" || reply.value === "take_photo") {
+      // Get photo requirements if available
+      const currentItemTitle = state.activeItemTitle;
+      if (currentItemTitle) {
+        const photoReqs = getPhotoRequirements(currentItemTitle);
+        if (photoReqs.length > 0) {
+          const photoMessage = formatPhotoRequirementsMessage(currentItemTitle);
+          await onAddMessage(photoMessage, "assistant");
+          setState(prev => ({ ...prev, quickReplies: [] }));
+          return;
+        }
+      }
+      
+      // Fallback if no specific requirements
       await onAddMessage(
-        "Great idea! Tap the '📷 Add Photo' button below to take or upload a photo. I'll analyze it and fill in the details for you.",
+        "Great! Tap the '📷 Add Photo' button below to take or upload a photo. I'll analyze it and fill in the details for you.",
         "assistant"
       );
       setState(prev => ({ ...prev, quickReplies: [] }));
@@ -202,7 +239,7 @@ export function useConversationFlow({
       }
     }
 
-    // Move to next question or complete item
+    // Move to next question or show confirmation
     const nextIndex = state.questionIndex + 1;
     
     if (nextIndex < questions.length) {
@@ -220,10 +257,10 @@ export function useConversationFlow({
         quickReplies: nextQuestion.options
       }));
     } else {
-      // Complete this checklist item
-      await completeCurrentItem(newAnswers);
+      // Show confirmation before completing
+      await showCompletionConfirmation(newAnswers);
     }
-  }, [state, jobType, jurisdiction, checklistItems, onAddMessage, startItemQuestions]);
+  }, [state, jobType, jurisdiction, checklistItems, onAddMessage, startItemQuestions, showCompletionConfirmation]);
 
   // Handle "continue" after a follow-up
   const handleContinue = useCallback(async () => {
@@ -246,23 +283,58 @@ export function useConversationFlow({
     }
   }, [state, jobType, jurisdiction, onAddMessage]);
 
-  // Complete the current checklist item
-  const completeCurrentItem = useCallback(async (answers: Record<string, string>) => {
+  // Show confirmation before completing item
+  const showCompletionConfirmation = useCallback(async (answers: Record<string, string>) => {
     if (!state.activeItemTitle) return;
 
-    const currentItem = checklistItems.find(item => item.title === state.activeItemTitle);
+    // Format the captured information
+    const formattedAnswers = Object.entries(answers)
+      .map(([key, value]) => `• ${key}: ${value}`)
+      .join('\n');
+
+    await onAddMessage(
+      `Perfect! I've captured this information:\n\n**${state.activeItemTitle}** ✅\n\n${formattedAnswers}\n\nIs this correct?`,
+      "assistant"
+    );
+
+    setState(prev => ({
+      ...prev,
+      pendingCompletion: {
+        itemTitle: state.activeItemTitle!,
+        answers
+      },
+      quickReplies: [
+        { label: "✅ Yes, that's right", value: "confirm_complete" },
+        { label: "✏️ Edit something", value: "edit_answers" }
+      ]
+    }));
+  }, [state.activeItemTitle, onAddMessage]);
+
+  // Complete the current checklist item (after confirmation)
+  const completeCurrentItem = useCallback(async () => {
+    if (!state.pendingCompletion) return;
+
+    const { itemTitle, answers } = state.pendingCompletion;
+    const currentItem = checklistItems.find(item => item.title === itemTitle);
+    
     if (currentItem) {
       onCompleteItem(currentItem.id, answers);
     }
 
+    const completedCount = checklistItems.filter(i => i.status === "COMPLETE").length + 1;
+    const totalCount = checklistItems.length;
+
     await onAddMessage(
-      `✅ **${state.activeItemTitle}** — Done! I've saved all that info.`,
+      `✅ **${itemTitle}** — Complete! (${completedCount} of ${totalCount} done)\n\nI've saved all that info.`,
       "assistant"
     );
 
+    // Clear pending completion
+    setState(prev => ({ ...prev, pendingCompletion: null }));
+
     // Move to next incomplete item
     await moveToNextItem();
-  }, [state.activeItemTitle, checklistItems, onCompleteItem, onAddMessage]);
+  }, [state.pendingCompletion, checklistItems, onCompleteItem, onAddMessage]);
 
   // Move to the next incomplete checklist item
   const moveToNextItem = useCallback(async () => {
@@ -282,7 +354,8 @@ export function useConversationFlow({
         questionIndex: 0,
         answers: {},
         quickReplies: [],
-        isComplete: true
+        isComplete: true,
+        pendingCompletion: null
       });
       return;
     }
@@ -308,7 +381,8 @@ export function useConversationFlow({
           { label: "Yes, continue! ✨", value: "continue_next" },
           { label: "Take a break", value: "pause" }
         ],
-        isComplete: false
+        isComplete: false,
+        pendingCompletion: null
       });
     } else {
       // No questions for remaining items - suggest photo approach
@@ -326,7 +400,8 @@ export function useConversationFlow({
           { label: "📷 Add Photo", value: "photo" },
           { label: "Skip for now", value: "pause" }
         ],
-        isComplete: false
+        isComplete: false,
+        pendingCompletion: null
       });
     }
   }, [jobType, jurisdiction, checklistItems, state.activeItemTitle, onAddMessage]);
@@ -344,13 +419,58 @@ export function useConversationFlow({
           { label: "Review answers", value: "review" },
           { label: "Make changes", value: "edit" },
           { label: "Continue", value: "continue_flow" }
-        ]
+        ],
+        pendingCompletion: null
       }));
       return;
     }
 
     await startItemQuestions(item.title);
   }, [startItemQuestions, onAddMessage]);
+
+  // Handle "Tell Me More" button click
+  const handleTellMeMore = useCallback(async (item: ChecklistItem) => {
+    // Create detailed explanation
+    let explanation = `Great question! Let me explain **${item.title}** in detail.\n\n`;
+    explanation += `📋 **What this is:**\n${item.description}\n\n`;
+    
+    // Check if we have photo requirements
+    const photoReqs = getPhotoRequirements(item.title);
+    if (photoReqs.length > 0) {
+      explanation += `📸 **Photos needed:**\n`;
+      photoReqs.forEach((req, i) => {
+        explanation += `${i + 1}. ${req.name} - ${req.instructions}\n`;
+      });
+      explanation += `\n`;
+    }
+    
+    // Check if we have questions for this item
+    const questions = getQuestionsForItem(jobType, jurisdiction, item.title);
+    if (questions.length > 0) {
+      explanation += `💬 **What I'll ask about:**\n`;
+      questions.forEach((q, i) => {
+        explanation += `${i + 1}. ${q.question.split('\n')[0]}\n`;
+      });
+      explanation += `\n`;
+    }
+    
+    explanation += `Ready to document this requirement?`;
+    
+    await onAddMessage(explanation, "assistant");
+    
+    setState(prev => ({
+      ...prev,
+      activeItemTitle: item.title,
+      questionIndex: 0,
+      answers: {},
+      quickReplies: [
+        { label: "Yes, let's do it! ✨", value: questions.length > 0 ? "start" : "photo" },
+        { label: "📷 I'll take photos", value: "photo" },
+        { label: "Skip for now", value: "pause" }
+      ],
+      pendingCompletion: null
+    }));
+  }, [jobType, jurisdiction, onAddMessage]);
 
   // Handle continuing to the next item after a pause
   const handleContinueNext = useCallback(async () => {
@@ -376,6 +496,7 @@ export function useConversationFlow({
       }
     },
     handleChecklistItemClick,
+    handleTellMeMore,
     startItemQuestions
   };
 }

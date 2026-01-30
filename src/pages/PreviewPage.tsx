@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, FileText, RotateCcw, CheckCircle2, MapPin, ExternalLink, BookOpen } from "lucide-react";
+import { ArrowLeft, FileText, RotateCcw, CheckCircle2, MapPin, ExternalLink, BookOpen, Download, Printer, Mail } from "lucide-react";
 import PageWrapper from "@/components/layout/PageWrapper";
 import Button from "@/components/shared/Button";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
@@ -86,6 +86,31 @@ export default function PreviewPage() {
     navigate(`/details/${jobId}`);
   };
 
+  const handlePrint = () => {
+    window.print();
+    toast.success("Opening print dialog...");
+  };
+
+  const handleDownload = () => {
+    // In a real implementation, this would generate a PDF
+    // For now, we'll trigger the print dialog
+    toast.info("Download PDF", {
+      description: "Use your browser's print function and select 'Save as PDF'"
+    });
+    setTimeout(() => window.print(), 500);
+  };
+
+  const handleEmail = () => {
+    const subject = encodeURIComponent(`Permit Package: ${JOB_TYPE_LABELS[currentJob.jobType]}`);
+    const body = encodeURIComponent(
+      `My permit package for ${JOB_TYPE_LABELS[currentJob.jobType]} at ${currentJob.address || 'my property'}.\n\n` +
+      `Completed ${completedItems.length} of ${checklistItems.length} requirements.\n\n` +
+      `View full details: ${window.location.href}`
+    );
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    toast.success("Opening email client...");
+  };
+
   const completedItems = checklistItems.filter(i => i.status === "COMPLETE");
   const pendingItems = checklistItems.filter(i => i.status !== "COMPLETE");
 
@@ -165,6 +190,37 @@ export default function PreviewPage() {
 
       {/* Content */}
       <div className="p-3 space-y-4 pb-6">
+        {/* Quick Actions */}
+        <div className="flex gap-2 print:hidden">
+          <Button
+            onClick={handlePrint}
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            icon={<Printer size={16} />}
+          >
+            Print
+          </Button>
+          <Button
+            onClick={handleDownload}
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            icon={<Download size={16} />}
+          >
+            PDF
+          </Button>
+          <Button
+            onClick={handleEmail}
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            icon={<Mail size={16} />}
+          >
+            Email
+          </Button>
+        </div>
+
         {/* Job Summary Card */}
         <div className="bg-card rounded-lg border border-border p-3">
           <div className="flex items-start gap-3">
@@ -273,30 +329,58 @@ export default function PreviewPage() {
           />
         )}
 
-        {/* Your Answers Summary */}
-        {completedItems.length > 0 && (
-          <section>
-            <h3 className="font-semibold text-sm text-foreground mb-2 flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-success" />
-              Your Answers ({completedItems.length})
-            </h3>
-            <div className="space-y-2">
-              {completedItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-success/5 border border-success/20 rounded-lg p-3"
-                >
-                  <h4 className="font-medium text-sm text-foreground">{item.title}</h4>
-                  {item.value && (
-                    <div className="mt-1.5 px-2 py-1.5 bg-card rounded text-xs text-foreground">
-                      {item.value}
-                    </div>
-                  )}
-                </div>
-              ))}
+        {/* Requirements Checklist */}
+        <section>
+          <h3 className="font-semibold text-sm text-foreground mb-2 flex items-center gap-1.5">
+            <CheckCircle2 size={16} className="text-success" />
+            Requirements Checklist
+          </h3>
+          <div className="bg-card rounded-lg border border-border divide-y divide-border">
+            <div className="p-3 bg-primary/5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Progress</span>
+                <span className="text-sm font-bold text-primary">
+                  {completedItems.length} of {checklistItems.length} complete
+                </span>
+              </div>
+              <div className="mt-2 w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-success transition-all duration-300"
+                  style={{ width: `${(completedItems.length / checklistItems.length) * 100}%` }}
+                />
+              </div>
             </div>
-          </section>
-        )}
+            {checklistItems.map((item) => (
+              <div
+                key={item.id}
+                className={`p-3 ${item.status === "COMPLETE" ? "bg-success/5" : ""}`}
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {item.status === "COMPLETE" ? (
+                      <div className="w-5 h-5 rounded-full bg-success flex items-center justify-center">
+                        <CheckCircle2 size={14} className="text-success-foreground" />
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border-2 border-border" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm text-foreground">{item.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                    {item.value && item.status === "COMPLETE" && (
+                      <div className="mt-2 px-3 py-2 bg-card rounded-lg border border-border">
+                        <pre className="text-xs text-foreground whitespace-pre-wrap font-sans">
+                          {typeof item.value === 'string' ? item.value : JSON.stringify(item.value, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Photos */}
         {photos.length > 0 && (
