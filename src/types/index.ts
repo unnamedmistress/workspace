@@ -1,14 +1,36 @@
-// Job Types - Top 9 Pinellas County Permits
+// Job Types - Expanded based on contractor feedback
 export type JobType = 
+  // HVAC & Mechanical
   | "AC_HVAC_CHANGEOUT"
   | "WATER_HEATER"
+  
+  // Roofing (TOP PRIORITY per contractor feedback)
   | "RE_ROOFING"
+  | "ROOF_REPAIR"
+  
+  // Electrical
   | "ELECTRICAL_PANEL"
-  | "WINDOW_DOOR_REPLACEMENT"
-  | "POOL_BARRIER"
-  | "GENERATOR_INSTALL"
+  | "ELECTRICAL_REWIRING"
   | "EV_CHARGER"
-  | "SMALL_BATH_REMODEL";
+  | "GENERATOR_INSTALL"
+  
+  // Plumbing
+  | "PLUMBING_MAIN_LINE"
+  
+  // Interior Remodeling
+  | "SMALL_BATH_REMODEL"
+  | "KITCHEN_REMODEL"
+  
+  // Exterior
+  | "WINDOW_DOOR_REPLACEMENT"
+  | "SIDING_EXTERIOR"
+  | "DECK_INSTALLATION"
+  | "FENCE_INSTALLATION"
+  | "POOL_BARRIER"
+  
+  // Structural
+  | "ROOM_ADDITION"
+  | "FOUNDATION_REPAIR";
 
 export type Jurisdiction = "PINELLAS";
 export type JobStatus = "IN_PROGRESS" | "READY_FOR_PREVIEW";

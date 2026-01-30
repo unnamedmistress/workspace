@@ -1,22 +1,202 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Zap, Droplet, Bath, MapPin, Sun, SquareStack, Fence, BatteryCharging, Car } from "lucide-react";
+import { 
+  ArrowLeft, Zap, Droplet, Bath, MapPin, Sun, SquareStack, Fence, 
+  BatteryCharging, Car, Home, Hammer, Wrench, Search, X 
+} from "lucide-react";
 import PageWrapper from "@/components/layout/PageWrapper";
 import Button from "@/components/shared/Button";
 import { useJob } from "@/hooks/useJob";
 import { JobType, Jurisdiction } from "@/types";
 
-const JOB_TYPES: { type: JobType; label: string; icon: typeof Zap; description: string }[] = [
-  { type: "SMALL_BATH_REMODEL", label: "Bath Remodel", icon: Bath, description: "Small bathroom renovation" },
-  { type: "AC_HVAC_CHANGEOUT", label: "AC/HVAC", icon: Sun, description: "Like-for-like replacement" },
-  { type: "WATER_HEATER", label: "Water Heater", icon: Droplet, description: "Tank or tankless install" },
-  { type: "RE_ROOFING", label: "Re-Roofing", icon: SquareStack, description: "Shingle, tile, or metal" },
-  { type: "ELECTRICAL_PANEL", label: "Electrical Panel", icon: Zap, description: "Panel upgrades" },
-  { type: "WINDOW_DOOR_REPLACEMENT", label: "Window/Door", icon: SquareStack, description: "Impact windows & doors" },
-  { type: "POOL_BARRIER", label: "Pool Barrier", icon: Fence, description: "Safety fence or enclosure" },
-  { type: "GENERATOR_INSTALL", label: "Generator", icon: BatteryCharging, description: "Standby generator" },
-  { type: "EV_CHARGER", label: "EV Charger", icon: Car, description: "Level 2 charging" },
+interface JobTypeOption {
+  type: JobType;
+  label: string;
+  icon: typeof Zap;
+  description: string;
+  category: "hvac" | "roofing" | "electrical" | "plumbing" | "interior" | "exterior" | "structural";
+  keywords: string[];
+}
+
+const JOB_TYPES: JobTypeOption[] = [
+  // HVAC & Mechanical
+  { 
+    type: "AC_HVAC_CHANGEOUT", 
+    label: "AC/HVAC Replacement", 
+    icon: Sun, 
+    description: "Like-for-like unit changeout",
+    category: "hvac",
+    keywords: ["ac", "hvac", "air conditioning", "heat pump", "cooling", "heating"]
+  },
+  { 
+    type: "WATER_HEATER", 
+    label: "Water Heater", 
+    icon: Droplet, 
+    description: "Tank or tankless install",
+    category: "hvac",
+    keywords: ["water heater", "hot water", "tank", "tankless"]
+  },
+  
+  // Roofing (TOP PRIORITY)
+  { 
+    type: "RE_ROOFING", 
+    label: "Roof Replacement", 
+    icon: SquareStack, 
+    description: "Full re-roof (shingle, tile, metal)",
+    category: "roofing",
+    keywords: ["roof", "roofing", "reroof", "shingle", "tile", "metal roof"]
+  },
+  { 
+    type: "ROOF_REPAIR", 
+    label: "Roof Repair", 
+    icon: SquareStack, 
+    description: "Patch, leak repair, minor work",
+    category: "roofing",
+    keywords: ["roof repair", "leak", "patch", "roofing"]
+  },
+  
+  // Electrical
+  { 
+    type: "ELECTRICAL_PANEL", 
+    label: "Electrical Panel", 
+    icon: Zap, 
+    description: "Panel upgrade or replacement",
+    category: "electrical",
+    keywords: ["electrical", "panel", "breaker", "service upgrade", "200 amp"]
+  },
+  { 
+    type: "ELECTRICAL_REWIRING", 
+    label: "Electrical Rewiring", 
+    icon: Zap, 
+    description: "Circuit additions, rewiring",
+    category: "electrical",
+    keywords: ["rewiring", "electrical", "circuits", "wiring", "outlets"]
+  },
+  { 
+    type: "EV_CHARGER", 
+    label: "EV Charger", 
+    icon: Car, 
+    description: "Level 2 EV charging station",
+    category: "electrical",
+    keywords: ["ev", "charger", "electric vehicle", "tesla", "charging"]
+  },
+  { 
+    type: "GENERATOR_INSTALL", 
+    label: "Generator", 
+    icon: BatteryCharging, 
+    description: "Standby generator install",
+    category: "electrical",
+    keywords: ["generator", "standby", "backup power", "generac"]
+  },
+  
+  // Plumbing
+  { 
+    type: "PLUMBING_MAIN_LINE", 
+    label: "Plumbing Main Line", 
+    icon: Droplet, 
+    description: "Main line repair/replacement",
+    category: "plumbing",
+    keywords: ["plumbing", "main line", "sewer", "water line", "pipe"]
+  },
+  
+  // Interior Remodeling
+  { 
+    type: "SMALL_BATH_REMODEL", 
+    label: "Bathroom Remodel", 
+    icon: Bath, 
+    description: "Bath renovation (any size)",
+    category: "interior",
+    keywords: ["bathroom", "bath", "remodel", "renovation", "shower", "tub"]
+  },
+  { 
+    type: "KITCHEN_REMODEL", 
+    label: "Kitchen Remodel", 
+    icon: Home, 
+    description: "Kitchen renovation",
+    category: "interior",
+    keywords: ["kitchen", "remodel", "renovation", "cabinets", "countertops"]
+  },
+  
+  // Exterior
+  { 
+    type: "WINDOW_DOOR_REPLACEMENT", 
+    label: "Window/Door", 
+    icon: SquareStack, 
+    description: "Impact windows & doors",
+    category: "exterior",
+    keywords: ["window", "door", "impact", "replacement", "sliding door"]
+  },
+  { 
+    type: "SIDING_EXTERIOR", 
+    label: "Siding/Exterior", 
+    icon: Home, 
+    description: "Siding, soffit, fascia",
+    category: "exterior",
+    keywords: ["siding", "exterior", "soffit", "fascia", "cladding"]
+  },
+  { 
+    type: "DECK_INSTALLATION", 
+    label: "Deck Installation", 
+    icon: SquareStack, 
+    description: "Deck construction or replacement",
+    category: "exterior",
+    keywords: ["deck", "decking", "patio", "porch"]
+  },
+  { 
+    type: "FENCE_INSTALLATION", 
+    label: "Fence", 
+    icon: Fence, 
+    description: "Fence install (may not need permit)",
+    category: "exterior",
+    keywords: ["fence", "fencing", "privacy fence", "chain link"]
+  },
+  { 
+    type: "POOL_BARRIER", 
+    label: "Pool Barrier", 
+    icon: Fence, 
+    description: "Safety fence or enclosure",
+    category: "exterior",
+    keywords: ["pool", "barrier", "safety fence", "pool cage", "screen enclosure"]
+  },
+  
+  // Structural
+  { 
+    type: "ROOM_ADDITION", 
+    label: "Room Addition", 
+    icon: Home, 
+    description: "Adding square footage",
+    category: "structural",
+    keywords: ["addition", "room addition", "expansion", "sunroom", "florida room"]
+  },
+  { 
+    type: "FOUNDATION_REPAIR", 
+    label: "Foundation Repair", 
+    icon: Hammer, 
+    description: "Structural foundation work",
+    category: "structural",
+    keywords: ["foundation", "structural", "repair", "underpinning", "pier"]
+  },
+];
+
+const CATEGORY_LABELS = {
+  hvac: "🔥 HVAC & Mechanical",
+  roofing: "🏠 Roofing (Most Common)",
+  electrical: "⚡ Electrical",
+  plumbing: "💧 Plumbing",
+  interior: "🛋️ Interior Remodeling",
+  exterior: "🏡 Exterior",
+  structural: "🏗️ Structural"
+};
+
+const CATEGORY_ORDER: Array<keyof typeof CATEGORY_LABELS> = [
+  "roofing", // Put roofing first based on contractor feedback
+  "hvac",
+  "electrical",
+  "plumbing",
+  "interior",
+  "exterior",
+  "structural"
 ];
 
 const JURISDICTIONS: { code: Jurisdiction; label: string }[] = [
@@ -31,9 +211,36 @@ export default function NewJobPage() {
   const [selectedType, setSelectedType] = useState<JobType | null>(null);
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<Jurisdiction | null>(null);
   const [address, setAddress] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+
+  // Filter and group job types
+  const filteredJobTypes = useMemo(() => {
+    if (!searchQuery.trim()) return JOB_TYPES;
+    
+    const query = searchQuery.toLowerCase();
+    return JOB_TYPES.filter(job => 
+      job.label.toLowerCase().includes(query) ||
+      job.description.toLowerCase().includes(query) ||
+      job.keywords.some(keyword => keyword.includes(query))
+    );
+  }, [searchQuery]);
+
+  const groupedJobTypes = useMemo(() => {
+    const grouped = new Map<string, JobTypeOption[]>();
+    
+    filteredJobTypes.forEach(job => {
+      const category = job.category;
+      if (!grouped.has(category)) {
+        grouped.set(category, []);
+      }
+      grouped.get(category)!.push(job);
+    });
+    
+    return grouped;
+  }, [filteredJobTypes]);
 
   const handleTypeSelect = (type: JobType) => {
-    // Add haptic feedback
     navigator.vibrate?.(10);
     setSelectedType(type);
     
@@ -71,9 +278,16 @@ export default function NewJobPage() {
   };
 
   const handleBack = () => {
-    if (step === "address") setStep("jurisdiction");
+    if (step === "address") setStep("type");
     else if (step === "jurisdiction") setStep("type");
     else navigate(-1);
+  };
+
+  const handleCannotFind = () => {
+    toast.info("Project not listed?", {
+      description: "Contact Pinellas County Building directly at (727) 464-3199 for help determining permit requirements.",
+      duration: 6000,
+    });
   };
 
   return (
@@ -94,6 +308,14 @@ export default function NewJobPage() {
             {step === "address" && "Step 3: Enter address (optional)"}
           </p>
         </div>
+        {step === "type" && (
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors tap-target flex items-center justify-center"
+          >
+            {showSearch ? <X size={20} /> : <Search size={20} />}
+          </button>
+        )}
       </header>
 
       {/* Progress indicator */}
@@ -107,42 +329,125 @@ export default function NewJobPage() {
       <div className="px-3 py-3 pb-20">
         {step === "type" && (
           <>
+            {/* Search Bar */}
+            {showSearch && (
+              <div className="mb-4">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search project types..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 bg-muted rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Residential Only Notice */}
-            <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mb-4">
-              <p className="text-xs text-primary font-medium">
-                🏠 Residential Permits Only
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                This tool supports single-family and two-family dwellings in Pinellas County. For commercial projects, contact Pinellas County Building Services directly.
-              </p>
-            </div>
+            {!searchQuery && (
+              <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mb-4">
+                <p className="text-xs text-primary font-medium">
+                  🏠 Residential Permits Only
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  This tool supports single-family and two-family dwellings in Pinellas County. For commercial projects, contact Pinellas County Building Services directly.
+                </p>
+              </div>
+            )}
             
-            <h2 className="text-sm font-semibold text-foreground mb-3">
-              What type of permit job?
-            </h2>
-            <div className="space-y-2">
-              {JOB_TYPES.map(({ type, label, icon: Icon, description }) => (
-                <button
-                  key={type}
-                  onClick={() => handleTypeSelect(type)}
-                  className={`w-full p-3 rounded-xl border-2 text-left flex items-center gap-3 transition-all ${
-                    selectedType === type
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
+            {/* Job Types - Grouped by Category */}
+            {searchQuery && filteredJobTypes.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground mb-4">
+                  No projects match "{searchQuery}"
+                </p>
+                <Button
+                  onClick={handleCannotFind}
+                  variant="secondary"
+                  size="sm"
                 >
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    selectedType === type ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`}>
-                    <Icon size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-foreground">{label}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{description}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  My project isn't listed
+                </Button>
+              </div>
+            ) : searchQuery ? (
+              <div className="space-y-2">
+                <h2 className="text-sm font-semibold text-foreground mb-3">
+                  Search Results ({filteredJobTypes.length})
+                </h2>
+                {filteredJobTypes.map(({ type, label, icon: Icon, description }) => (
+                  <button
+                    key={type}
+                    onClick={() => handleTypeSelect(type)}
+                    className="w-full p-3 rounded-xl border-2 text-left flex items-center gap-3 transition-all border-border hover:border-primary/50"
+                  >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-muted text-muted-foreground">
+                      <Icon size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-foreground">{label}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                {CATEGORY_ORDER.map(category => {
+                  const jobs = groupedJobTypes.get(category);
+                  if (!jobs || jobs.length === 0) return null;
+                  
+                  return (
+                    <div key={category} className="mb-6">
+                      <h2 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
+                        {CATEGORY_LABELS[category]}
+                      </h2>
+                      <div className="space-y-2">
+                        {jobs.map(({ type, label, icon: Icon, description }) => (
+                          <button
+                            key={type}
+                            onClick={() => handleTypeSelect(type)}
+                            className={`w-full p-3 rounded-xl border-2 text-left flex items-center gap-3 transition-all ${
+                              selectedType === type
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              selectedType === type ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            }`}>
+                              <Icon size={20} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-medium text-foreground">{label}</h3>
+                              <p className="text-xs text-muted-foreground truncate">{description}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Cannot Find Link */}
+                <div className="mt-6 p-4 bg-muted rounded-xl">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Can't find your project type?
+                  </p>
+                  <Button
+                    onClick={handleCannotFind}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    <Wrench size={16} className="mr-2" />
+                    Get help from Building Department
+                  </Button>
+                </div>
+              </>
+            )}
           </>
         )}
 

@@ -207,15 +207,37 @@ function determineBathroomPermitRequirements(scope: DetailedScope): PermitRequir
  */
 function getDefaultPermitTypes(jobType: JobType): string[] {
   const permitMap: Record<JobType, string[]> = {
+    // HVAC & Mechanical
     AC_HVAC_CHANGEOUT: ["Mechanical Permit"],
     WATER_HEATER: ["Plumbing Permit", "Electrical Permit (if electric)"],
-    RE_ROOFING: ["Roofing Permit"],
+    
+    // Roofing
+    RE_ROOFING: ["Roofing Permit", "Structural Permit (if truss modification)"],
+    ROOF_REPAIR: ["Roofing Permit"],
+    
+    // Electrical
     ELECTRICAL_PANEL: ["Electrical Permit"],
-    WINDOW_DOOR_REPLACEMENT: ["Building Permit"],
-    POOL_BARRIER: ["Building Permit"],
-    GENERATOR_INSTALL: ["Electrical Permit", "Fuel Gas Permit (if applicable)"],
+    ELECTRICAL_REWIRING: ["Electrical Permit"],
     EV_CHARGER: ["Electrical Permit"],
-    SMALL_BATH_REMODEL: [] // Handled by intelligent logic
+    GENERATOR_INSTALL: ["Electrical Permit", "Fuel Gas Permit (if applicable)"],
+    
+    // Plumbing
+    PLUMBING_MAIN_LINE: ["Plumbing Permit"],
+    
+    // Interior Remodeling
+    SMALL_BATH_REMODEL: [], // Handled by intelligent logic
+    KITCHEN_REMODEL: ["Building Permit", "Plumbing Permit", "Electrical Permit"],
+    
+    // Exterior
+    WINDOW_DOOR_REPLACEMENT: ["Building Permit (if structural opening changes)"],
+    SIDING_EXTERIOR: ["Building Permit"],
+    DECK_INSTALLATION: ["Building Permit"],
+    FENCE_INSTALLATION: [], // Usually no permit if under 6ft
+    POOL_BARRIER: ["Building Permit"],
+    
+    // Structural
+    ROOM_ADDITION: ["Building Permit", "Electrical Permit", "Plumbing Permit", "Mechanical Permit"],
+    FOUNDATION_REPAIR: ["Building Permit", "Structural Engineering Review"]
   };
   
   return permitMap[jobType] || [];
