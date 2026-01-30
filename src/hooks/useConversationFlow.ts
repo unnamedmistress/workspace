@@ -310,76 +310,6 @@ export function useConversationFlow({
     }));
   }, [state.activeItemTitle, onAddMessage]);
 
-  // Move to the next incomplete checklist item
-  const moveToNextItemImpl = useCallback(async () => {
-    // Check actual completion status
-    const remainingIncomplete = checklistItems.filter(
-      item => item.status !== "COMPLETE" && item.title !== state.activeItemTitle
-    );
-
-    if (remainingIncomplete.length === 0) {
-      await onAddMessage(
-        "🎉 **All done!** You've completed all the requirements. Tap 'Preview Package' to see your permit documents!",
-        "assistant"
-      );
-      
-      setState({
-        activeItemTitle: null,
-        questionIndex: 0,
-        answers: {},
-        quickReplies: [],
-        isComplete: true,
-        pendingCompletion: null
-      });
-      return;
-    }
-
-    // Try to find next item with questions
-    const nextIncompleteWithQuestions = getFirstIncompleteQuestions(
-      jobType, 
-      jurisdiction, 
-      remainingIncomplete
-    );
-
-    if (nextIncompleteWithQuestions) {
-      await onAddMessage(
-        `Great! **${remainingIncomplete.length} items** left. Let's move on to **${nextIncompleteWithQuestions.itemTitle}**. Ready?`,
-        "assistant"
-      );
-      
-      setState({
-        activeItemTitle: nextIncompleteWithQuestions.itemTitle,
-        questionIndex: 0,
-        answers: {},
-        quickReplies: [
-          { label: "Yes, continue! ✨", value: "continue_next" },
-          { label: "Take a break", value: "pause" }
-        ],
-        isComplete: false,
-        pendingCompletion: null
-      });
-    } else {
-      // No questions for remaining items - suggest photo approach
-      const nextTitle = remainingIncomplete[0].title;
-      await onAddMessage(
-        `Good progress! **${remainingIncomplete.length} items** left.\n\nFor **${nextTitle}**, let's document it with photos. Tap '📷 Add Photo' below.`,
-        "assistant"
-      );
-      
-      setState({
-        activeItemTitle: null,
-        questionIndex: 0,
-        answers: {},
-        quickReplies: [
-          { label: "📷 Add Photo", value: "photo" },
-          { label: "Skip for now", value: "pause" }
-        ],
-        isComplete: false,
-        pendingCompletion: null
-      });
-    }
-  }, [jobType, jurisdiction, checklistItems, state.activeItemTitle, onAddMessage]);
-
   // Complete the current checklist item (after confirmation)
   const completeCurrentItem = useCallback(async () => {
     if (!state.pendingCompletion) return;
@@ -470,8 +400,45 @@ export function useConversationFlow({
     }
   }, [state.pendingCompletion, checklistItems, onCompleteItem, onAddMessage, jobType, jurisdiction]);
 
-  // Wrapper for external use
-  const moveToNextItem = moveToNextItemImpl;
+  // Helper to move to next item (used by continue_flow)
+  const moveToNextItem = useCallback(async () => {
+    const remainingIncomplete = checklistItems.filter(
+      item => item.status !== "COMPLETE"
+    );
+
+    if (remainingIncomplete.length === 0) {
+      await onAddMessage(
+        "🎉 **All done!** You've completed all the requirements. Tap 'Preview Package' to see your permit documents!",
+        "assistant"
+      );
+      setState(prev => ({ ...prev, quickReplies: [], isComplete: true }));
+      return;
+    }
+
+    const nextIncompleteWithQuestions = getFirstIncompleteQuestions(
+      jobType, 
+      jurisdiction, 
+      remainingIncomplete
+    );
+
+    if (nextIncompleteWithQuestions) {
+      await startItemQuestions(nextIncompleteWithQuestions.itemTitle);
+    } else {
+      const nextTitle = remainingIncomplete[0].title;
+      await onAddMessage(
+        `Let's continue with **${nextTitle}**. Tap '📷 Add Photo' below to document it.`,
+        "assistant"
+      );
+      setState(prev => ({
+        ...prev,
+        activeItemTitle: nextTitle,
+        quickReplies: [
+          { label: "📷 Add Photo", value: "photo" },
+          { label: "Skip for now", value: "pause" }
+        ]
+      }));
+    }
+  }, [checklistItems, jobType, jurisdiction, onAddMessage, startItemQuestions]);
 
   // Handle clicking on a checklist item
   const handleChecklistItemClick = useCallback(async (item: ChecklistItem) => {
