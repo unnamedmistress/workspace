@@ -1,20 +1,22 @@
 const { setGlobalOptions } = require("firebase-functions");
 const { onRequest } = require("firebase-functions/https");
+const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const cors = require("cors")({ origin: true });
 
 setGlobalOptions({ maxInstances: 10 });
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
+const GOOGLE_PLACES_API_KEY = defineSecret("GOOGLE_PLACES_API_KEY");
 
-exports.openaiChat = onRequest(async (req, res) => {
+exports.openaiChat = onRequest({ secrets: [OPENAI_API_KEY] }, async (req, res) => {
   return cors(req, res, async () => {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    if (!OPENAI_API_KEY) {
+    const openaiKey = OPENAI_API_KEY.value();
+    if (!openaiKey) {
       return res.status(500).json({ error: "OPENAI_API_KEY not configured" });
     }
 
@@ -28,7 +30,7 @@ exports.openaiChat = onRequest(async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          Authorization: `Bearer ${openaiKey}`,
         },
         body: JSON.stringify({
           model: "gpt-4o-mini",
@@ -52,13 +54,14 @@ exports.openaiChat = onRequest(async (req, res) => {
   });
 });
 
-exports.placesAutocomplete = onRequest(async (req, res) => {
+exports.placesAutocomplete = onRequest({ secrets: [GOOGLE_PLACES_API_KEY] }, async (req, res) => {
   return cors(req, res, async () => {
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    if (!GOOGLE_PLACES_API_KEY) {
+    const placesKey = GOOGLE_PLACES_API_KEY.value();
+    if (!placesKey) {
       return res.status(500).json({ error: "GOOGLE_PLACES_API_KEY not configured" });
     }
 
@@ -70,7 +73,7 @@ exports.placesAutocomplete = onRequest(async (req, res) => {
     try {
       const url = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
       url.searchParams.set("input", input);
-      url.searchParams.set("key", GOOGLE_PLACES_API_KEY);
+      url.searchParams.set("key", placesKey);
       url.searchParams.set("components", "country:us");
 
       const response = await fetch(url.toString());
@@ -83,13 +86,14 @@ exports.placesAutocomplete = onRequest(async (req, res) => {
   });
 });
 
-exports.placeDetails = onRequest(async (req, res) => {
+exports.placeDetails = onRequest({ secrets: [GOOGLE_PLACES_API_KEY] }, async (req, res) => {
   return cors(req, res, async () => {
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    if (!GOOGLE_PLACES_API_KEY) {
+    const placesKey = GOOGLE_PLACES_API_KEY.value();
+    if (!placesKey) {
       return res.status(500).json({ error: "GOOGLE_PLACES_API_KEY not configured" });
     }
 
@@ -102,7 +106,7 @@ exports.placeDetails = onRequest(async (req, res) => {
       const url = new URL("https://maps.googleapis.com/maps/api/place/details/json");
       url.searchParams.set("place_id", placeId);
       url.searchParams.set("fields", "formatted_address,address_component,geometry");
-      url.searchParams.set("key", GOOGLE_PLACES_API_KEY);
+      url.searchParams.set("key", placesKey);
 
       const response = await fetch(url.toString());
       const data = await response.json();
