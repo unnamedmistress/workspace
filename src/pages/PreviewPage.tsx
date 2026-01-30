@@ -19,6 +19,7 @@ import PhotoGuidelines from "@/components/permit/PhotoGuidelines";
 import TimelineEstimate from "@/components/permit/TimelineEstimate";
 import LicensingInfo from "@/components/permit/LicensingInfo";
 import ProfessionalDirectory from "@/components/permit/ProfessionalDirectory";
+import InspectionCheckpoints from "@/components/permit/InspectionCheckpoints";
 import { JobType } from "@/types";
 
 const JOB_TYPE_LABELS: Record<JobType, string> = {
@@ -221,6 +222,11 @@ export default function PreviewPage() {
             jobType={jobType}
             jurisdiction="Pinellas County"
           />
+        )}
+
+        {/* INSPECTION CHECKPOINTS - Only show if permit required */}
+        {permitReq.required && (
+          <InspectionCheckpoints jobType={jobType} />
         )}
 
         {/* LICENSING INFO */}

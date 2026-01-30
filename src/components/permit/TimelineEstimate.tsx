@@ -268,21 +268,7 @@ const PERMIT_TIMELINES: Record<JobType, {
       { phase: "Final Inspection", duration: "After backfill", description: "Verify repair" },
     ],
     notes: "Requires licensed structural engineer involvement"
-  },
-  DECK_INSTALLATION: {
-    reviewTime: "5-7 business days",
-    firstInspection: "After footings",
-    totalProcess: "2-3 weeks typical",
-    phases: [
-      { phase: "Submit Application", duration: "Day 1", description: "Structural plans required" },
-      { phase: "Plan Review", duration: "5-7 days", description: "Structural review" },
-      { phase: "Footings", duration: "1 day", description: "Dig and inspect before concrete" },
-      { phase: "Framing", duration: "2-3 days", description: "Build structure" },
-      { phase: "Framing Inspection", duration: "Before decking", description: "Verify structure" },
-      { phase: "Finish", duration: "2-3 days", description: "Decking and railing" },
-      { phase: "Final Inspection", duration: "Call when ready", description: "Safety verification" },
-    ]
-  },
+  }
 };
 
 export default function TimelineEstimate({ jobType, jurisdiction = "Pinellas County" }: TimelineEstimateProps) {

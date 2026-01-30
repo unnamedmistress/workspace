@@ -9,6 +9,8 @@ import PageWrapper from "@/components/layout/PageWrapper";
 import Button from "@/components/shared/Button";
 import { useJob } from "@/hooks/useJob";
 import { JobType, Jurisdiction } from "@/types";
+import JobTemplates from "@/components/jobs/JobTemplates";
+import { JobTemplate } from "@/data/jobTemplates";
 
 interface JobTypeOption {
   type: JobType;
@@ -226,12 +228,13 @@ export default function NewJobPage() {
   const navigate = useNavigate();
   const { createJob, isLoading } = useJob();
   
-  const [step, setStep] = useState<"type" | "jurisdiction" | "address">("type");
+  const [step, setStep] = useState<"template-choice" | "templates" | "type" | "jurisdiction" | "address">("template-choice");
   const [selectedType, setSelectedType] = useState<JobType | null>(null);
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<Jurisdiction | null>(null);
   const [address, setAddress] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
 
   // Filter and group job types
   const filteredJobTypes = useMemo(() => {
@@ -258,6 +261,31 @@ export default function NewJobPage() {
     
     return grouped;
   }, [filteredJobTypes]);
+
+  const handleTemplateSelect = (template: JobTemplate) => {
+    navigator.vibrate?.(10);
+    setSelectedTemplate(template);
+    setSelectedType(template.jobType);
+    setSelectedJurisdiction(template.jurisdiction);
+    
+    // Pre-fill address if in template
+    if (template.preFilledData.notes?.includes("Address")) {
+      // Extract address from notes if present
+    }
+    
+    setStep("address");
+    toast.success("Template loaded!", {
+      description: `Starting with: ${template.name}`,
+    });
+  };
+
+  const handleUseTemplate = () => {
+    setStep("templates");
+  };
+
+  const handleStartFromScratch = () => {
+    setStep("type");
+  };
 
   const handleTypeSelect = (type: JobType) => {
     navigator.vibrate?.(10);
@@ -297,8 +325,10 @@ export default function NewJobPage() {
   };
 
   const handleBack = () => {
-    if (step === "address") setStep("type");
+    if (step === "address") setStep(selectedTemplate ? "templates" : "type");
     else if (step === "jurisdiction") setStep("type");
+    else if (step === "type") setStep("template-choice");
+    else if (step === "templates") setStep("template-choice");
     else navigate(-1);
   };
 
@@ -322,9 +352,11 @@ export default function NewJobPage() {
         <div className="flex-1 min-w-0">
           <h1 className="text-sm font-semibold text-foreground">New Job</h1>
           <p className="text-xs text-muted-foreground">
-            {step === "type" && "Step 1: Select job type"}
-            {step === "jurisdiction" && "Step 2: Select jurisdiction"}
-            {step === "address" && "Step 3: Enter address (optional)"}
+            {step === "template-choice" && "Choose how to start"}
+            {step === "templates" && "Select a template"}
+            {step === "type" && "Select job type"}
+            {step === "jurisdiction" && "Select jurisdiction"}
+            {step === "address" && "Enter address (optional)"}
           </p>
         </div>
         {step === "type" && (
@@ -346,6 +378,58 @@ export default function NewJobPage() {
 
       {/* Content */}
       <div className="px-3 py-3 pb-20">
+        {step === "template-choice" && (
+          <div className="space-y-4">
+            <div className="text-center py-6">
+              <h2 className="text-lg font-semibold text-foreground mb-2">
+                How would you like to start?
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Choose a quick-start template or build from scratch
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleUseTemplate}
+                className="w-full p-4 rounded-xl border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-all flex items-center gap-3"
+              >
+                <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">⚡</span>
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="text-sm font-semibold text-foreground">Use a Template</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Start with pre-filled common scenarios - saves time!
+                  </p>
+                </div>
+              </button>
+
+              <button
+                onClick={handleStartFromScratch}
+                className="w-full p-4 rounded-xl border-2 border-border hover:border-primary/50 transition-all flex items-center gap-3"
+              >
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">📝</span>
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="text-sm font-semibold text-foreground">Start from Scratch</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Choose job type and enter details manually
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "templates" && (
+          <JobTemplates 
+            onSelectTemplate={handleTemplateSelect}
+            onDismiss={handleStartFromScratch}
+          />
+        )}
+
         {step === "type" && (
           <>
             {/* Search Bar */}
