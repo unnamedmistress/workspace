@@ -12,9 +12,8 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { useJob } from "@/hooks/useJob";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useMessages } from "@/hooks/useMessages";
-import { useConversationFlow } from "@/hooks/useConversationFlow";
 import { usePhotos } from "@/context/PhotoContext";
-import { Photo, ChecklistItem, QuickReply } from "@/types";
+import { Photo, ChecklistItem } from "@/types";
 import PhotoGuidelines from "@/components/permit/PhotoGuidelines";
 import { getAiAssistantResponse } from "@/lib/aiAssistant";
 import { db, storage, isFirebaseReady } from "@/config/firebase";
@@ -41,7 +40,6 @@ export default function WizardPage() {
   
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [conversationStarted, setConversationStarted] = useState(false);
   const [messagesLoaded, setMessagesLoaded] = useState(false);
   const startConversationRef = useRef(false);
   const [activeTab, setActiveTab] = useState<"chat" | "checklist">("chat");
@@ -50,26 +48,22 @@ export default function WizardPage() {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [jobNotFound, setJobNotFound] = useState(false);
 
-  // Handle completing a checklist item
-  const handleCompleteItem = useCallback((itemId: string, data: Record<string, unknown>) => {
-    updateItem(itemId, { status: "COMPLETE", ...data });
-  }, [updateItem]);
-
-  // Conversation flow hook
-  const {
-    quickReplies,
-    isFlowComplete,
-    handleQuickReply,
-    handleChecklistItemClick,
-    handleTellMeMore,
-    startConversation
-  } = useConversationFlow({
-    jobType: currentJob?.jobType || "ELECTRICAL_PANEL",
-    jurisdiction: currentJob?.jurisdiction || "PINELLAS",
-    checklistItems,
-    onAddMessage: addMessage,
-    onCompleteItem: handleCompleteItem
-  });
+  const sendAiReply = useCallback(
+    async (prompt: string) => {
+      setIsAiLoading(true);
+      const aiResponse = await getAiAssistantResponse({
+        jobType: currentJob?.jobType || "ELECTRICAL_PANEL",
+        jurisdiction: currentJob?.jurisdiction || "PINELLAS",
+        checklistItems,
+        userPrompt: prompt,
+      });
+      if (aiResponse) {
+        await addMessage(aiResponse, "assistant");
+      }
+      setIsAiLoading(false);
+    },
+    [addMessage, currentJob, checklistItems]
+  );
 
   // Initialize job data
   useEffect(() => {
@@ -99,30 +93,20 @@ export default function WizardPage() {
     init();
   }, [jobId, loadPhotos, fetchMessages, getJob, fetchChecklist, initializeChecklist]);
 
-  // Start conversation flow after initialization
+  // Send AI greeting after initialization
   useEffect(() => {
     if (
       initialized &&
       messagesLoaded &&
       currentJob &&
       checklistItems.length > 0 &&
-      !conversationStarted &&
       messages.length === 0 &&
       !startConversationRef.current
     ) {
       startConversationRef.current = true;
-      setConversationStarted(true);
-      startConversation();
+      sendAiReply("Start the job by welcoming the user and asking what they want to document first.");
     }
-  }, [
-    initialized,
-    messagesLoaded,
-    currentJob,
-    checklistItems,
-    conversationStarted,
-    messages.length,
-    startConversation,
-  ]);
+  }, [initialized, messagesLoaded, currentJob, checklistItems, messages.length, sendAiReply]);
 
   const handleSendMessage = useCallback(async (content: string) => {
     if (!jobId) return;
@@ -148,18 +132,11 @@ export default function WizardPage() {
     setIsAiLoading(false);
   }, [jobId, addMessage, currentJob, checklistItems]);
 
-  const handleQuickReplySelect = useCallback(async (reply: QuickReply) => {
-    setIsAiLoading(true);
-    await handleQuickReply(reply);
-    setIsAiLoading(false);
-  }, [handleQuickReply]);
-
   const handleChecklistClick = useCallback(async (item: ChecklistItem) => {
-    setIsAiLoading(true);
-    await handleChecklistItemClick(item);
-    setIsAiLoading(false);
-    setActiveTab("chat"); // Switch to chat when clicking a checklist item
-  }, [handleChecklistItemClick]);
+    await addMessage(`Tell me about: ${item.title}`, "user");
+    await sendAiReply(`Explain the checklist item ${item.title} and what evidence is needed.`);
+    setActiveTab("chat");
+  }, [addMessage, sendAiReply]);
 
   const handleAddPhoto = () => {
     // Add haptic feedback
@@ -422,18 +399,12 @@ export default function WizardPage() {
             <ChatPanel
               messages={messages}
               onSendMessage={handleSendMessage}
-              onQuickReply={handleQuickReplySelect}
-              quickReplies={quickReplies}
               isLoading={isAiLoading}
             />
           ) : (
             <ChecklistPanel
               items={checklistItems}
               onItemClick={handleChecklistClick}
-              onTellMeMore={(item) => {
-                handleTellMeMore(item);
-                setActiveTab("chat"); // Switch to chat when clicking Tell Me More
-              }}
             />
           )}
         </div>
@@ -444,8 +415,6 @@ export default function WizardPage() {
             <ChatPanel
               messages={messages}
               onSendMessage={handleSendMessage}
-              onQuickReply={handleQuickReplySelect}
-              quickReplies={quickReplies}
               isLoading={isAiLoading}
             />
           </div>
@@ -453,7 +422,6 @@ export default function WizardPage() {
             <ChecklistPanel
               items={checklistItems}
               onItemClick={handleChecklistClick}
-              onTellMeMore={handleTellMeMore}
             />
           </div>
         </div>
