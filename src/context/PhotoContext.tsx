@@ -1,14 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { Photo } from "@/types";
-import { db, isFirebaseReady } from "@/config/firebase";
-import { useAuth } from "@/context/AuthContext";
-import {
-  collection,
-  getDocs,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
 
 interface PhotoContextValue {
   photos: Record<string, Photo[]>;
@@ -22,50 +13,23 @@ interface PhotoContextValue {
 
 const PhotoContext = createContext<PhotoContextValue | null>(null);
 
+// In-memory storage for photos
+const memoryPhotos: Record<string, Photo[]> = {};
+
 export function PhotoProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
   const [photos, setPhotos] = useState<Record<string, Photo[]>>({});
 
-  const useFirestore = isFirebaseReady() && !!db && !!user;
-
   const getPhotos = useCallback((jobId: string): Photo[] => {
-    return photos[jobId] || [];
+    return photos[jobId] || memoryPhotos[jobId] || [];
   }, [photos]);
 
   const loadPhotos = useCallback(async (jobId: string) => {
-    if (!useFirestore || !db || !user) return;
-
-    try {
-      const photosQuery = query(
-        collection(db, "photos"),
-        where("jobId", "==", jobId),
-        where("userId", "==", user.uid),
-        orderBy("uploadedAt", "asc")
-      );
-
-      const snapshot = await getDocs(photosQuery);
-      const fetched = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          jobId: data.jobId,
-          url: data.url,
-          storagePath: data.storagePath,
-          extractedData: data.extractedData ?? {},
-          uploadedAt: data.uploadedAt?.toDate ? data.uploadedAt.toDate() : new Date(),
-          status: data.status ?? "COMPLETE",
-          userId: data.userId,
-        } as Photo;
-      });
-
-      setPhotos((prev) => ({ ...prev, [jobId]: fetched }));
-    } catch (error) {
-      console.error("Failed to load photos", error);
-      setPhotos((prev) => ({ ...prev, [jobId]: prev[jobId] || [] }));
-    }
-  }, [useFirestore, user]);
+    // Load from memory only (no Firestore)
+    setPhotos((prev) => ({ ...prev, [jobId]: memoryPhotos[jobId] || [] }));
+  }, []);
 
   const addPhoto = useCallback((jobId: string, photo: Photo) => {
+    memoryPhotos[jobId] = [...(memoryPhotos[jobId] || []), photo];
     setPhotos(prev => ({
       ...prev,
       [jobId]: [...(prev[jobId] || []), photo],
@@ -73,6 +37,9 @@ export function PhotoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updatePhoto = useCallback((jobId: string, photoId: string, updates: Partial<Photo>) => {
+    memoryPhotos[jobId] = (memoryPhotos[jobId] || []).map(p => 
+      p.id === photoId ? { ...p, ...updates } : p
+    );
     setPhotos(prev => ({
       ...prev,
       [jobId]: (prev[jobId] || []).map(p => 
@@ -82,6 +49,7 @@ export function PhotoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deletePhoto = useCallback((jobId: string, photoId: string) => {
+    memoryPhotos[jobId] = (memoryPhotos[jobId] || []).filter(p => p.id !== photoId);
     setPhotos(prev => ({
       ...prev,
       [jobId]: (prev[jobId] || []).filter(p => p.id !== photoId),
@@ -89,6 +57,7 @@ export function PhotoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearPhotos = useCallback((jobId: string) => {
+    delete memoryPhotos[jobId];
     setPhotos(prev => {
       const next = { ...prev };
       delete next[jobId];
