@@ -365,14 +365,21 @@ export default function NewJobPage() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedType || !selectedJurisdiction) return;
+    console.log("handleSubmit called", { selectedType, selectedJurisdiction, address });
+    if (!selectedType || !selectedJurisdiction) {
+      console.log("Missing type or jurisdiction");
+      return;
+    }
     
     try {
+      console.log("Creating job...");
       const job = await createJob(selectedType, selectedJurisdiction, address || undefined);
+      console.log("Job created:", job);
       const jobTypeLabel = JOB_TYPES.find(t => t.type === selectedType)?.label || selectedType;
       toast.success("Job created!", {
         description: `${jobTypeLabel} job is ready to document.`,
       });
+      console.log("Navigating to:", `/wizard/${job.id}`);
       navigate(`/wizard/${job.id}`);
     } catch (error) {
       console.error("Failed to create job:", error);
