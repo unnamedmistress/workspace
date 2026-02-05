@@ -11,6 +11,10 @@ export default defineConfig({
       overlay: false,
     },
   },
+  build: {
+    sourcemap: true,
+    minify: false, // Disable minification for debugging
+  },
   plugins: [react()],
   resolve: {
     alias: {
