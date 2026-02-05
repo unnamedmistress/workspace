@@ -364,10 +364,12 @@ export default function NewJobPage() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
     console.log("handleSubmit called", { selectedType, selectedJurisdiction, address });
     if (!selectedType || !selectedJurisdiction) {
       console.log("Missing type or jurisdiction");
+      toast.error("Please select a job type first");
       return;
     }
     
@@ -643,7 +645,8 @@ export default function NewJobPage() {
               </div>
               
               <Button
-                onClick={handleSubmit}
+                type="button"
+                onClick={(e) => handleSubmit(e)}
                 variant="primary"
                 size="lg"
                 loading={isLoading}
@@ -653,7 +656,8 @@ export default function NewJobPage() {
               </Button>
               
               <button
-                onClick={handleSubmit}
+                type="button"
+                onClick={(e) => handleSubmit(e)}
                 disabled={isLoading}
                 className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
               >
