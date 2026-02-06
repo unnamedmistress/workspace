@@ -5,6 +5,16 @@ import PageWrapper from '@/components/layout/PageWrapper';
 import SmartWizard, { WizardData } from '@/components/wizard/SmartWizard';
 import { Job, JobStatus } from '@/types/permit';
 
+// Simple error boundary component
+function ErrorFallback({ error }: { error: Error }) {
+  return (
+    <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+      <h3 className="text-red-700 font-semibold">Something went wrong</h3>
+      <p className="text-red-600 text-sm mt-1">{error.message}</p>
+    </div>
+  );
+}
+
 // In-memory job storage (replaces Firebase)
 const memoryJobs: Map<string, Job> = new Map();
 
@@ -40,6 +50,7 @@ export function getJobFromMemory(id: string): Job | undefined {
 export default function NewJobPage() {
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const handleWizardComplete = async (data: WizardData) => {
     setIsCreating(true);
@@ -56,6 +67,16 @@ export default function NewJobPage() {
       setIsCreating(false);
     }
   };
+
+  if (error) {
+    return (
+      <PageWrapper hasBottomNav={false}>
+        <div className="container max-w-4xl mx-auto px-4 py-8">
+          <ErrorFallback error={error} />
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper hasBottomNav={false}>
