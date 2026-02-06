@@ -65,6 +65,7 @@ export default function SmartWizard({ onComplete }: SmartWizardProps) {
   const totalSteps = 4;
 
   const handleNext = async () => {
+    console.log('handleNext called, current step:', step);
     if (step === 3) {
       // Analyze requirements before completing
       await analyzeRequirements();
@@ -104,8 +105,13 @@ export default function SmartWizard({ onComplete }: SmartWizardProps) {
   };
 
   const handleComplete = () => {
-    if (!data.jobType || !data.jurisdiction || !data.address) return;
+    console.log('handleComplete called');
+    if (!data.jobType || !data.jurisdiction || !data.address) {
+      console.log('Missing required data, cannot complete');
+      return;
+    }
     
+    console.log('Completing wizard with data:', { jobType: data.jobType, jurisdiction: data.jurisdiction, address: data.address });
     onComplete({
       jobType: data.jobType,
       jurisdiction: data.jurisdiction,
