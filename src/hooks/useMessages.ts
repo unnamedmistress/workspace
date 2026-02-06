@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Message } from "@/types";
 
-// In-memory storage (no auth required)
+// In-memory storage (no auth required - works in guest mode)
 let memoryMessages: Record<string, Message[]> = {};
 
 export function useMessages(jobId: string) {
