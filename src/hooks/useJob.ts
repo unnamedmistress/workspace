@@ -28,10 +28,13 @@ export function useJob() {
 
   const createJob = useCallback(
     async (jobType: JobType, jurisdiction: Jurisdiction, address?: string): Promise<Job> => {
+      console.log("=== useJob.createJob START ===", { jobType, jurisdiction, address });
       setIsLoading(true);
       setError(null);
       try {
         const sessionId = getSessionId();
+        console.log("Session ID:", sessionId);
+        
         const newJob: Job = {
           id: `job-${Date.now()}`,
           sessionId,
@@ -45,12 +48,18 @@ export function useJob() {
           address,
           title: getJobTitle(jobType, address),
         };
+        
+        console.log("Created new job object:", newJob);
 
         memoryJobs = [...memoryJobs, newJob];
+        console.log("Updated memoryJobs, count:", memoryJobs.length);
+        
         setJobs((prev) => [...prev, newJob]);
         setCurrentJob(newJob);
+        console.log("=== useJob.createJob SUCCESS ===");
         return newJob;
       } catch (err) {
+        console.error("=== useJob.createJob ERROR ===", err);
         setError("Failed to create job");
         throw err;
       } finally {

@@ -365,28 +365,49 @@ export default function NewJobPage() {
   };
 
   const handleSubmit = async () => {
-    console.log("handleSubmit called", { selectedType, selectedJurisdiction, address });
-    if (!selectedType || !selectedJurisdiction) {
-      console.log("Missing type or jurisdiction");
-      toast.error("Please select a job type first");
+    console.log("=== handleSubmit START ===");
+    console.log("Current state:", { step, selectedType, selectedJurisdiction, address });
+    
+    if (!selectedType) {
+      console.error("No job type selected");
+      toast.error("Please select a job type");
       return;
     }
     
+    if (!selectedJurisdiction) {
+      console.error("No jurisdiction selected");
+      toast.error("Please select a jurisdiction");
+      return;
+    }
+    
+    console.log("All required fields present, creating job...");
+    
     try {
-      console.log("Creating job...");
+      setIsLoading(true);
+      console.log("Calling createJob with:", { selectedType, selectedJurisdiction, address });
       const job = await createJob(selectedType, selectedJurisdiction, address || undefined);
-      console.log("Job created:", job);
+      console.log("Job created successfully:", job);
+      
+      if (!job || !job.id) {
+        throw new Error("Job creation returned invalid data");
+      }
+      
       const jobTypeLabel = JOB_TYPES.find(t => t.type === selectedType)?.label || selectedType;
       toast.success("Job created!", {
         description: `${jobTypeLabel} job is ready to document.`,
       });
-      console.log("Navigating to:", `/wizard/${job.id}`);
-      navigate(`/wizard/${job.id}`);
+      
+      const wizardPath = `/wizard/${job.id}`;
+      console.log("Navigating to:", wizardPath);
+      navigate(wizardPath);
+      console.log("=== handleSubmit END - Navigation called ===");
     } catch (error) {
-      console.error("Failed to create job:", error);
+      console.error("=== handleSubmit ERROR ===", error);
       toast.error("Failed to create job", {
-        description: "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
