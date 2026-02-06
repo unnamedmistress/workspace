@@ -1,10 +1,14 @@
 import OpenAI from 'openai';
 import { JobAnalysisRequest, JobAnalysisResponse, Requirement } from '@/types/permit';
 
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+// Check if API key exists
+const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+console.log('OpenAI API Key exists:', !!apiKey);
+
+const openai = apiKey ? new OpenAI({
+  apiKey,
   dangerouslyAllowBrowser: true
-});
+}) : null;
 
 export async function analyzeJobRequirements(
   request: JobAnalysisRequest
@@ -26,6 +30,12 @@ Address: ${request.address}
 Description: ${request.description}
 ${request.squareFootage ? `Square Footage: ${request.squareFootage}` : ''}
 ${request.yearBuilt ? `Year Built: ${request.yearBuilt}` : ''}`;
+
+  // If no API key, return fallback requirements immediately
+  if (!openai) {
+    console.log('No OpenAI API key, using fallback requirements');
+    return getFallbackRequirements(request.jobType);
+  }
 
   try {
     const response = await openai.chat.completions.create({
