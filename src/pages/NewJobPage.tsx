@@ -238,6 +238,7 @@ export default function NewJobPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter and group job types
   const filteredJobTypes = useMemo(() => {
@@ -383,7 +384,7 @@ export default function NewJobPage() {
     console.log("All required fields present, creating job...");
     
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
       console.log("Calling createJob with:", { selectedType, selectedJurisdiction, address });
       const job = await createJob(selectedType, selectedJurisdiction, address || undefined);
       console.log("Job created successfully:", job);
@@ -407,7 +408,7 @@ export default function NewJobPage() {
         description: error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -669,7 +670,7 @@ export default function NewJobPage() {
                 onClick={() => handleSubmit()}
                 variant="primary"
                 size="lg"
-                loading={isLoading}
+                loading={isSubmitting || isLoading}
                 className="w-full"
               >
                 Start New Job
@@ -678,7 +679,7 @@ export default function NewJobPage() {
               <button
                 type="button"
                 onClick={() => handleSubmit()}
-                disabled={isLoading}
+                disabled={isSubmitting || isLoading}
                 className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
               >
                 Skip for now
