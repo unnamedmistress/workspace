@@ -3,11 +3,9 @@ import { ExternalLink, AlertTriangle, Check, X } from "lucide-react";
 import PageWrapper from "@/components/layout/PageWrapper";
 import { isFirebaseConfigured, isOpenAIConfigured } from "@/config/env";
 import { clearSessionId, getSessionId } from "@/utils/sessionId";
-import { useAuth } from "@/context/AuthContext";
 
 export default function SettingsPage() {
   const [sessionId] = useState(getSessionId());
-  const { user, signOut } = useAuth();
   const firebaseConfigured = isFirebaseConfigured();
   const openaiConfigured = isOpenAIConfigured();
 
@@ -78,16 +76,9 @@ export default function SettingsPage() {
             <h2 className="font-semibold text-foreground">Account</h2>
           </div>
           <div className="px-4 py-3 space-y-2">
-            <label className="text-sm text-muted-foreground">Signed in as</label>
-            <p className="text-sm text-foreground">{user?.email ?? "Not signed in"}</p>
-            {user && (
-              <button
-                onClick={() => signOut()}
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                Sign out
-              </button>
-            )}
+            <label className="text-sm text-muted-foreground">Mode</label>
+            <p className="text-sm text-foreground">Guest Mode (No sign-in required)</p>
+            <p className="text-xs text-muted-foreground">All data is stored locally in your browser.</p>
           </div>
         </section>
 

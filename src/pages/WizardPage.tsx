@@ -16,10 +16,8 @@ import { usePhotos } from "@/context/PhotoContext";
 import { Photo } from "@/types";
 import PhotoGuidelines from "@/components/permit/PhotoGuidelines";
 import { getAiAssistantResponse } from "@/lib/aiAssistant";
-import { db, storage, isFirebaseReady } from "@/config/firebase";
-import { useAuth } from "@/context/AuthContext";
-import { addDoc, collection, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
-import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+// Auth/Firebase removed - app works without authentication
+const useFirebase = false;
 
 // Photo validation constants
 const MAX_PHOTO_SIZE_MB = 10;
@@ -35,8 +33,6 @@ export default function WizardPage() {
   const { items: checklistItems, fetchChecklist, initializeChecklist, updateItem, getProgress } = useChecklist(jobId || "");
   const { messages, fetchMessages, addMessage } = useMessages(jobId || "");
   const { photos, loadPhotos, addPhoto, updatePhoto, deletePhoto } = usePhotos(jobId || "");
-  const { user } = useAuth();
-  const useFirebase = isFirebaseReady() && !!db && !!storage && !!user;
   
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -180,53 +176,9 @@ export default function WizardPage() {
     setUploadProgress(prev => ({ ...prev, [photoId]: 0 }));
     setPhotosExpanded(true); // Show photos when a new one is added
 
-    // Upload to Firebase Storage if configured
-    if (useFirebase && user && storage && db) {
-      const storagePath = `users/${user.uid}/jobs/${jobId}/${photoId}`;
-      const storageRef = ref(storage, storagePath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-          setUploadProgress(prev => ({ ...prev, [photoId]: progress }));
-        },
-        async () => {
-          updatePhoto(photoId, { status: "ERROR" });
-          toast.error("Photo upload failed", { description: "Please try again." });
-          setIsAiLoading(false);
-        },
-        async () => {
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          const photoDoc = await addDoc(collection(db, "photos"), {
-            jobId,
-            userId: user.uid,
-            url: downloadUrl,
-            storagePath,
-            status: "COMPLETE",
-            uploadedAt: serverTimestamp(),
-          });
-
-          deletePhoto(photoId);
-          addPhoto({
-            id: photoDoc.id,
-            jobId,
-            url: downloadUrl,
-            storagePath,
-            uploadedAt: new Date(),
-            status: "COMPLETE",
-            userId: user.uid,
-          });
-
-          setUploadProgress(prev => {
-            const next = { ...prev };
-            delete next[photoId];
-            return next;
-          });
-        }
-      );
-    } else {
+    // Firebase upload disabled - app works without auth
+    // Simulate upload progress
+    {
       // Simulate upload progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
