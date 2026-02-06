@@ -229,16 +229,42 @@ export default function NewJobPage() {
   const navigate = useNavigate();
   const { createJob, isLoading } = useJob();
   
-  const [step, setStep] = useState<"type" | "jurisdiction" | "address">("type");
-  const [selectedType, setSelectedType] = useState<JobType | null>(null);
-  const [selectedJurisdiction, setSelectedJurisdiction] = useState<Jurisdiction | null>(null);
-  const [address, setAddress] = useState("");
+  // Load persisted state from sessionStorage
+  const loadPersistedState = () => {
+    try {
+      const saved = sessionStorage.getItem('newJobState');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return null;
+  };
+  
+  const persisted = loadPersistedState();
+  
+  const [step, setStep] = useState<"type" | "jurisdiction" | "address">(persisted?.step || "type");
+  const [selectedType, setSelectedType] = useState<JobType | null>(persisted?.selectedType || null);
+  const [selectedJurisdiction, setSelectedJurisdiction] = useState<Jurisdiction | null>(persisted?.selectedJurisdiction || null);
+  const [address, setAddress] = useState(persisted?.address || "");
   const [addressSuggestions, setAddressSuggestions] = useState<{ description: string; placeId: string }[]>([]);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Persist state to sessionStorage whenever it changes
+  useEffect(() => {
+    const state = { step, selectedType, selectedJurisdiction, address };
+    sessionStorage.setItem('newJobState', JSON.stringify(state));
+  }, [step, selectedType, selectedJurisdiction, address]);
+  
+  // Clear persisted state when leaving the page successfully
+  const clearPersistedState = () => {
+    sessionStorage.removeItem('newJobState');
+  };
 
   // Filter and group job types
   const filteredJobTypes = useMemo(() => {
@@ -400,6 +426,7 @@ export default function NewJobPage() {
       
       const wizardPath = `/wizard/${job.id}`;
       console.log("Navigating to:", wizardPath);
+      clearPersistedState();
       navigate(wizardPath);
       console.log("=== handleSubmit END - Navigation called ===");
     } catch (error) {
