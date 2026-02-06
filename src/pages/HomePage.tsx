@@ -101,11 +101,14 @@ export default function HomePage() {
       <div className="px-3 -mt-4">
         {/* New Job Card - Compact */}
         <button
-          onClick={() => {
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             console.log('Start New Job clicked, navigating to /new');
             navigate("/new");
           }}
-          className="w-full bg-card rounded-xl p-3 shadow-md border border-border flex items-center gap-3 mb-4 hover:shadow-lg transition-shadow active:scale-[0.98]"
+          className="w-full bg-card rounded-xl p-3 shadow-md border border-border flex items-center gap-3 mb-4 hover:shadow-lg transition-shadow active:scale-[0.98] cursor-pointer"
         >
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
             <Plus size={20} className="text-primary-foreground" />

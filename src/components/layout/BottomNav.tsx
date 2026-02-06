@@ -22,8 +22,13 @@ export default function BottomNav() {
   }
 
   const handleNavClick = (path: string) => {
-    // Add haptic feedback
-    navigator.vibrate?.(10);
+    console.log('BottomNav clicked:', path);
+    // Add haptic feedback (safely)
+    try {
+      navigator.vibrate?.(10);
+    } catch {
+      // Ignore if not supported
+    }
     navigate(path);
   };
 
@@ -33,6 +38,7 @@ export default function BottomNav() {
         const isActive = location.pathname === path;
         return (
           <button
+            type="button"
             key={path}
             onClick={() => handleNavClick(path)}
             className={`bottom-nav-item ${isActive ? "active" : ""} focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset`}
