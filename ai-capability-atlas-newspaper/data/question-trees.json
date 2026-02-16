@@ -1,0 +1,273 @@
+{
+  "hot-water-heater": {
+    "name": "Hot Water Heater",
+    "category": "mechanical",
+    "description": "Water heater installation or replacement",
+    "icon": "🔥",
+    "questions": [
+      {
+        "id": "replacement",
+        "text": "Are you replacing an existing water heater?",
+        "type": "yes-no",
+        "helpText": "New installation requires more extensive permits",
+        "required": true
+      },
+      {
+        "id": "same-location",
+        "text": "Will it be in the same location as the existing one?",
+        "type": "yes-no",
+        "condition": {
+          "field": "replacement",
+          "equals": "yes"
+        },
+        "helpText": "Moving location requires new gas line or venting",
+        "required": true
+      },
+      {
+        "id": "fuel-type",
+        "text": "What fuel type are you using?",
+        "type": "select",
+        "options": [
+          { "value": "same-gas", "label": "Same as existing (gas)" },
+          { "value": "same-electric", "label": "Same as existing (electric)" },
+          { "value": "gas-to-electric", "label": "Converting from gas to electric" },
+          { "value": "electric-to-gas", "label": "Converting from electric to gas" }
+        ],
+        "helpText": "Fuel conversion requires additional permits",
+        "required": true
+      },
+      {
+        "id": "capacity",
+        "text": "What is the capacity of the new water heater?",
+        "type": "select",
+        "options": [
+          { "value": "same-smaller", "label": "Same size or smaller than existing" },
+          { "value": "larger", "label": "Larger capacity than existing" }
+        ],
+        "helpText": "Larger capacity may require electrical or gas service upgrades",
+        "required": true
+      }
+    ],
+    "baseLevel": 1
+  },
+  
+  "bathroom-remodel": {
+    "name": "Bathroom Remodel",
+    "category": "remodel",
+    "description": "Bathroom renovation or remodeling",
+    "icon": "🚿",
+    "questions": [
+      {
+        "id": "scope",
+        "text": "What changes are you making? (Select all that apply)",
+        "type": "multi-select",
+        "options": [
+          { 
+            "value": "cosmetic", 
+            "label": "Cosmetic only (tile, paint, vanity in same spot)",
+            "icon": "🎨"
+          },
+          { 
+            "value": "moving-fixtures", 
+            "label": "Moving plumbing fixtures (sink, toilet, shower)",
+            "icon": "🚰"
+          },
+          { 
+            "value": "removing-walls", 
+            "label": "Removing or moving walls",
+            "icon": "🔨"
+          },
+          { 
+            "value": "electrical", 
+            "label": "Adding outlets, lighting, or electrical work",
+            "icon": "💡"
+          },
+          { 
+            "value": "expanding", 
+            "label": "Expanding the bathroom size",
+            "icon": "📐"
+          },
+          { 
+            "value": "hvac", 
+            "label": "Changing ventilation or HVAC",
+            "icon": "🌬️"
+          }
+        ],
+        "helpText": "Select everything that applies to your project",
+        "required": true,
+        "minSelections": 1
+      },
+      {
+        "id": "wall-type",
+        "text": "Are any of the walls you're removing load-bearing?",
+        "type": "select",
+        "condition": {
+          "field": "scope",
+          "contains": "removing-walls"
+        },
+        "options": [
+          { "value": "yes", "label": "Yes, they're load-bearing walls" },
+          { "value": "no", "label": "No, they're just partition walls" },
+          { "value": "unknown", "label": "I'm not sure / I don't know" }
+        ],
+        "helpText": "Load-bearing walls support the structure above. If unsure, choose 'I don't know' and we'll recommend an engineer assessment.",
+        "required": true
+      },
+      {
+        "id": "plumbing-extent",
+        "text": "How extensive is the plumbing work?",
+        "type": "select",
+        "condition": {
+          "field": "scope",
+          "contains": "moving-fixtures"
+        },
+        "options": [
+          { "value": "minor", "label": "Just replacing fixtures in same locations" },
+          { "value": "relocate", "label": "Moving fixtures to new locations within bathroom" },
+          { "value": "new-fixtures", "label": "Adding new fixtures (extra sink, bidet, etc.)" }
+        ],
+        "required": true
+      },
+      {
+        "id": "expansion-size",
+        "text": "How much are you expanding the bathroom?",
+        "type": "select",
+        "condition": {
+          "field": "scope",
+          "contains": "expanding"
+        },
+        "options": [
+          { "value": "small", "label": "Small expansion (under 50 sq ft)" },
+          { "value": "medium", "label": "Medium expansion (50-100 sq ft)" },
+          { "value": "large", "label": "Large expansion (over 100 sq ft)" }
+        ],
+        "required": true
+      }
+    ],
+    "baseLevel": 0
+  },
+  
+  "deck": {
+    "name": "Deck",
+    "category": "exterior",
+    "description": "Deck construction or replacement",
+    "icon": "🪵",
+    "questions": [
+      {
+        "id": "size",
+        "text": "What is the approximate size of the deck?",
+        "type": "number",
+        "unit": "square feet",
+        "placeholder": "e.g., 200",
+        "helpText": "Calculate: Length × Width. Example: 10 ft × 20 ft = 200 sq ft",
+        "required": true,
+        "validation": {
+          "min": 1,
+          "max": 2000,
+          "errorMessage": "Please enter a valid deck size between 1 and 2000 square feet"
+        }
+      },
+      {
+        "id": "height",
+        "text": "How high will the deck be above the ground?",
+        "type": "select",
+        "options": [
+          { "value": "under-30", "label": "Under 30 inches (about 2.5 feet)" },
+          { "value": "30-72", "label": "30 inches to 6 feet" },
+          { "value": "over-72", "label": "Over 6 feet" }
+        ],
+        "helpText": "Measure from ground to top of deck surface. Height affects engineering requirements.",
+        "required": true
+      },
+      {
+        "id": "attached",
+        "text": "Will the deck be attached to your house?",
+        "type": "yes-no",
+        "helpText": "Attached decks connect to the house with a ledger board",
+        "required": true
+      },
+      {
+        "id": "second-floor",
+        "text": "Is this a second-floor or elevated deck?",
+        "type": "yes-no",
+        "helpText": "Second-floor decks always require engineering",
+        "required": true
+      }
+    ],
+    "baseLevel": 1
+  },
+  
+  "fence": {
+    "name": "Fence",
+    "category": "exterior",
+    "description": "Fence installation",
+    "icon": "🏡",
+    "questions": [
+      {
+        "id": "height",
+        "text": "How tall will the fence be?",
+        "type": "number",
+        "unit": "feet",
+        "placeholder": "e.g., 6",
+        "helpText": "Most jurisdictions have different rules for fences under/over 6 feet",
+        "required": true,
+        "validation": {
+          "min": 1,
+          "max": 20,
+          "errorMessage": "Please enter a valid fence height between 1 and 20 feet"
+        }
+      },
+      {
+        "id": "location",
+        "text": "Where will the fence be located?",
+        "type": "select",
+        "options": [
+          { "value": "interior", "label": "Well within my property boundaries" },
+          { "value": "property-line", "label": "On or near the property line" },
+          { "value": "easement", "label": "Near a utility easement or right-of-way" }
+        ],
+        "helpText": "Location affects permit requirements and approvals needed",
+        "required": true
+      },
+      {
+        "id": "retaining",
+        "text": "Will this include a retaining wall over 4 feet tall?",
+        "type": "yes-no",
+        "helpText": "Retaining walls over 4 feet typically require engineering",
+        "required": true
+      }
+    ],
+    "baseLevel": 0
+  },
+  
+  "hvac-replacement": {
+    "name": "HVAC Replacement",
+    "category": "mechanical",
+    "description": "Air conditioning or heating system replacement",
+    "icon": "❄️",
+    "questions": [
+      {
+        "id": "same-capacity",
+        "text": "Is the new system the same capacity (tonnage) as the existing?",
+        "type": "yes-no",
+        "helpText": "Same capacity usually qualifies for express permit",
+        "required": true
+      },
+      {
+        "id": "same-location",
+        "text": "Will it be installed in the same location?",
+        "type": "yes-no",
+        "helpText": "Moving location may require additional permits",
+        "required": true
+      },
+      {
+        "id": "ductwork",
+        "text": "Are you modifying or adding ductwork?",
+        "type": "yes-no",
+        "helpText": "Ductwork modifications require standard permit, not express",
+        "required": true
+      }
+    ],
+    "baseLevel": 1
+  }
+}

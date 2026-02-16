@@ -1,0 +1,229 @@
+{
+  "global": {
+    "alwaysRequired": [
+      "Second-story addition",
+      "Foundation modifications",
+      "Major structural beam/column work",
+      "Load-bearing wall removal"
+    ],
+    "neverRequired": [
+      "Cosmetic interior work",
+      "Like-for-like replacements",
+      "Fence installation (non-retaining)",
+      "Minor plumbing fixtures"
+    ]
+  },
+  
+  "byState": {
+    "FL": {
+      "name": "Florida",
+      "hurricaneZone": true,
+      "seismicZone": false,
+      
+      "byProject": {
+        "deck": {
+          "heightThreshold": 30,
+          "heightUnit": "inches",
+          "areaThreshold": 200,
+          "areaUnit": "square feet",
+          "rules": {
+            "under30AndUnder200": {
+              "engineering": false,
+              "note": "Simple permit, no engineering required"
+            },
+            "over30OrOver200Attached": {
+              "engineering": true,
+              "reason": "Height over 30\" or large attached deck requires structural engineering for ledger board attachment and support calculations"
+            },
+            "secondFloor": {
+              "engineering": true,
+              "reason": "Second-floor decks always require comprehensive structural engineering for safety"
+            }
+          },
+          "engineeringCost": {
+            "min": 800,
+            "max": 2000,
+            "typical": 1200
+          }
+        },
+        
+        "solar": {
+          "engineeringRequired": true,
+          "reason": "Florida requires roof load calculations for hurricane wind loads and panel mounting systems",
+          "requirements": [
+            "Roof structural analysis",
+            "Wind uplift calculations (hurricane zone)",
+            "Electrical load calculations"
+          ],
+          "engineeringCost": {
+            "min": 800,
+            "max": 2500,
+            "typical": 1500
+          }
+        },
+        
+        "pool": {
+          "engineeringRequired": true,
+          "reason": "In-ground pools require structural engineering for hurricane zone compliance",
+          "requirements": [
+            "Soil report and analysis",
+            "Foundation engineering",
+            "Barrier/fence compliance"
+          ],
+          "engineeringCost": {
+            "min": 1500,
+            "max": 3000,
+            "typical": 2000
+          }
+        },
+        
+        "bathroom-remodel": {
+          "triggers": {
+            "loadBearingWallRemoval": {
+              "engineering": true,
+              "reason": "Removing load-bearing walls requires structural calculations for proper beam sizing and support design"
+            },
+            "unknownWallType": {
+              "engineering": true,
+              "engineeringType": "assessment",
+              "reason": "Engineer assessment needed to determine if walls are load-bearing before removal permits can be issued"
+            },
+            "expandingFootprint": {
+              "engineering": true,
+              "reason": "Bathroom additions require foundation engineering, framing calculations, and roof structure analysis"
+            }
+          },
+          "engineeringCost": {
+            "assessment": { "min": 200, "max": 500 },
+            "beamCalculations": { "min": 500, "max": 1500 },
+            "fullAddition": { "min": 1500, "max": 3000 }
+          }
+        },
+        
+        "fence": {
+          "heightThreshold": 8,
+          "heightUnit": "feet",
+          "retainingThreshold": 48,
+          "retainingUnit": "inches",
+          "rules": {
+            "standardFence": {
+              "engineering": false,
+              "note": "Standard fence typically doesn't require engineering"
+            },
+            "tallFence": {
+              "engineering": false,
+              "note": "Fences over 8 ft may require engineering in high wind zones"
+            },
+            "retaining": {
+              "engineering": true,
+              "reason": "Retaining walls over 4 ft require engineering for soil pressure and stability calculations"
+            }
+          },
+          "engineeringCost": {
+            "min": 800,
+            "max": 2000
+          }
+        },
+        
+        "hot-water-heater": {
+          "engineeringRequired": false,
+          "note": "Water heater replacement typically does not require engineering"
+        },
+        
+        "hvac-replacement": {
+          "engineeringRequired": false,
+          "note": "HVAC replacement typically does not require engineering unless structural modifications needed"
+        }
+      },
+      
+      "byCounty": {
+        "Pinellas": {
+          "specificRules": {
+            "openings": {
+              "threshold": 16,
+              "unit": "inches",
+              "engineering": true,
+              "reason": "Pinellas County requires engineering for all structural openings 16 inches or greater"
+            }
+          }
+        }
+      }
+    },
+    
+    "CA": {
+      "name": "California",
+      "hurricaneZone": false,
+      "seismicZone": true,
+      
+      "byProject": {
+        "deck": {
+          "heightThreshold": 30,
+          "seismicRequired": true,
+          "rules": {
+            "anyDeck": {
+              "engineering": true,
+              "reason": "California requires seismic calculations for all decks over 30 inches in most jurisdictions"
+            }
+          },
+          "engineeringCost": {
+            "min": 1000,
+            "max": 2500,
+            "typical": 1500
+          }
+        },
+        
+        "solar": {
+          "engineeringRequired": true,
+          "reason": "Seismic zone requirements mandate structural engineering for roof-mounted solar systems",
+          "engineeringCost": {
+            "min": 1000,
+            "max": 3000,
+            "typical": 2000
+          }
+        },
+        
+        "bathroom-remodel": {
+          "triggers": {
+            "loadBearingWallRemoval": {
+              "engineering": true,
+              "reason": "Seismic zone requires engineering for any load-bearing wall modifications"
+            }
+          }
+        }
+      }
+    },
+    
+    "TX": {
+      "name": "Texas",
+      "hurricaneZone": false,
+      "seismicZone": false,
+      
+      "byProject": {
+        "deck": {
+          "heightThreshold": 30,
+          "areaThreshold": 200,
+          "rules": {
+            "standardDeck": {
+              "engineering": false,
+              "note": "Most residential decks don't require engineering in Texas"
+            },
+            "largeDeck": {
+              "engineering": true,
+              "reason": "Large decks over 400 sq ft or elevated over 6 ft typically require engineering"
+            }
+          },
+          "engineeringCost": {
+            "min": 600,
+            "max": 1500
+          }
+        },
+        
+        "pool": {
+          "engineeringRequired": false,
+          "note": "Many Texas jurisdictions don't require engineering for standard residential pools",
+          "caveat": "Always check with local building department"
+        }
+      }
+    }
+  }
+}

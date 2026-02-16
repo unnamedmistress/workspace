@@ -1,0 +1,31 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "jobs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "mode": "ASCENDING" },
+        { "fieldPath": "createdAt", "mode": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "jobId", "mode": "ASCENDING" },
+        { "fieldPath": "userId", "mode": "ASCENDING" },
+        { "fieldPath": "timestamp", "mode": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "photos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "jobId", "mode": "ASCENDING" },
+        { "fieldPath": "userId", "mode": "ASCENDING" },
+        { "fieldPath": "uploadedAt", "mode": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
