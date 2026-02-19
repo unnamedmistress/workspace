@@ -1,14 +1,627 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="AI-powered permit documentation assistant for residential projects in Pinellas County, Florida" />
-    <title>PermitPath - AI Permit Assistant</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenuSpy — Know What You're Eating</title>
+    <meta name="description" content="Six innovative solutions for restaurant menu transparency. From AR nutrition overlays to AI-powered allergen alerts.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #0B5FB5;
+            --primary-light: #3B82F6;
+            --secondary: #F59E0B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --light: #F3F4F6;
+            --white: #FFFFFF;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: var(--white);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--white);
+            padding: 6rem 0 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            line-height: 1.5;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        /* Concepts Grid */
+        .concepts {
+            padding: 4rem 0;
+            background: var(--light);
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.75rem;
+        }
+        
+        .section-header p {
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .concept-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .concept-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .concept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+        
+        .concept-card:nth-child(2)::before {
+            background: linear-gradient(90deg, var(--danger), var(--warning));
+        }
+        
+        .concept-card:nth-child(3)::before {
+            background: linear-gradient(90deg, var(--success), var(--primary-light));
+        }
+        
+        .concept-card:nth-child(4)::before {
+            background: linear-gradient(90deg, var(--secondary), var(--danger));
+        }
+        
+        .concept-card:nth-child(5)::before {
+            background: linear-gradient(90deg, #8B5CF6, var(--primary-light));
+        }
+        
+        .concept-card:nth-child(6)::before {
+            background: linear-gradient(90deg, #10B981, #059669);
+        }
+        
+        .concept-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--light);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .concept-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--dark);
+        }
+        
+        .concept-hook {
+            font-size: 1rem;
+            color: var(--gray);
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+        }
+        
+        .concept-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .tag {
+            padding: 0.35rem 0.75rem;
+            background: var(--light);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--gray);
+        }
+        
+        .tag.primary {
+            background: rgba(11, 95, 181, 0.1);
+            color: var(--primary);
+        }
+        
+        .concept-features {
+            list-style: none;
+        }
+        
+        .concept-features li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--dark);
+            border-bottom: 1px solid var(--light);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        
+        .concept-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .concept-features li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        
+        /* Problem Section */
+        .problem {
+            padding: 4rem 0;
+            background: var(--white);
+        }
+        
+        .problem-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .problem-text h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .problem-text p {
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .problem-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--light);
+            border-radius: 12px;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+        }
+        
+        /* FAQ */
+        .faq {
+            padding: 4rem 0;
+            background: var(--light);
+        }
+        
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            background: var(--white);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .faq-question {
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .faq-question:hover {
+            background: var(--light);
+        }
+        
+        .faq-question::after {
+            content: '+';
+            font-size: 1.5rem;
+            color: var(--gray);
+        }
+        
+        .faq-answer {
+            padding: 0 1.5rem 1.25rem;
+            color: var(--gray);
+            line-height: 1.6;
+            display: none;
+        }
+        
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+        
+        .faq-item.active .faq-question::after {
+            content: '−';
+        }
+        
+        /* CTA */
+        .cta {
+            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--dark) 0%, #374151 100%);
+            color: var(--white);
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .cta p {
+            opacity: 0.9;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+        
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: var(--primary);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(11, 95, 181, 0.3);
+        }
+        
+        /* Footer */
+        footer {
+            padding: 2rem 0;
+            background: var(--dark);
+            color: var(--gray);
+            text-align: center;
+            font-size: 0.875rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 4rem 0 3rem;
+            }
+            
+            .concepts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .problem-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .problem-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">🍽️ Restaurant Menu Transparency</div>
+                <h1>MenuSpy</h1>
+                <p class="hero-subtitle">Six innovative approaches to solving the restaurant information gap. From AR nutrition overlays to AI-powered allergen alerts — empowering diners to know what they're eating before they order.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="concepts">
+        <div class="container">
+            <div class="section-header">
+                <h2>Six Solutions, One Problem</h2>
+                <p>Each concept addresses a different aspect of menu transparency — from visual AR overlays to SMS-based allergen alerts, crowdsourced nutrition, and environmental impact tracking.</p>
+            </div>
+            
+            <div class="concepts-grid">
+                <article class="concept-card">
+                    <div class="concept-number">01</div>
+                    <h3>MenuLens</h3>
+                    <p class="concept-hook">Point your phone at any menu and instantly see calories, allergens, and nutrition overlaid on each dish using computer vision.</p>
+                    <div class="concept-tags">
+                        <span class="tag primary">AR Overlay</span>
+                        <span class="tag">Computer Vision</span>
+                        <span class="tag">Crowdsourced</span>
+                    </div>
+                    <ul class="concept-features">
+                        <li>Real-time nutrition badges via camera viewfinder</li>
+                        <li>On-device OCR for instant response (&lt;2 sec)</li>
+                        <li>Tap any dish for full ingredient breakdown</li>
+                        <li>Works anywhere via AI estimation + crowd verification</li>
+                    </ul>
+                </article>
+
+                <article class="concept-card">
+                    <div class="concept-number">02</div>
+                    <h3>AllergenAlert</h3>
+                    <p class="concept-hook">Text or scan any dish name and get instant allergen warnings personalized to your profile.</p>
+                    <div class="concept-tags">
+                        <span class="tag primary">SMS-First</span>
+                        <span class="tag">Safety</span>
+                        <span class="tag">No App Required</span>
+                    </div>
+                    <ul class="concept-features">
+                        <li>Zero friction: just text the dish name</li>
+                        <li>Risk-level alerts (Safe/Caution/Danger)</li>
+                        <li>Multiple profiles for families</li>
+                        <li>Restaurant QR codes for instant scanning</li>
+                    </ul>
+                </article>
+
+                <article class="concept-card">
+                    <div class="concept-number">03</div>
+                    <h3>MacroMatch</h3>
+                    <p class="concept-hook">Color-coded dishes based on your daily macro targets — green fits, yellow is close, red is over budget.</p>
+                    <div class="concept-tags">
+                        <span class="tag primary">Fitness</span>
+                        <span class="tag">Tracking</span>
+                        <span class="tag">Integrations</span>
+                    </div>
+                    <ul class="concept-features">
+                        <li>Set custom protein/carb/fat targets</li>
+                        <li>Instant color-coding on menu scan</li>
+                        <li>One-tap logging to MyFitnessPal, Fitbit</li>
+                        <li>Works with keto, paleo, any diet</li>
+                    </ul>
+                </article>
+
+                <article class="concept-card">
+                    <div class="concept-number">04</div>
+                    <h3>DishDecoder</h3>
+                    <p class="concept-hook">The Waze of food transparency — crowdsourced nutrition database built by diners, for diners.</p>
+                    <div class="concept-tags">
+                        <span class="tag primary">Crowdsourced</span>
+                        <span class="tag">Community</span>
+                        <span class="tag">Open Data</span>
+                    </div>
+                    <ul class="concept-features">
+                        <li>Submit dish photos and nutrition data</li>
+                        <li>Community verification system</li>
+                        <li>Points and badges for contributors</li>
+                        <li>Open API for third-party apps</li>
+                    </ul>
+                </article>
+
+                <article class="concept-card">
+                    <div class="concept-number">05</div>
+                    <h3>MenuGPT</h3>
+                    <p class="concept-hook">Conversational AI that answers complex diet questions in natural language — like having a nutritionist at the table.</p>
+                    <div class="concept-tags">
+                        <span class="tag primary">AI-Powered</span>
+                        <span class="tag">Conversational</span>
+                        <span class="tag">Smart</span>
+                    </div>
+                    <ul class="concept-features">
+                        <li>"Is this good for my keto diet?"</li>
+                        <li>Contextual answers based on your goals</li>
+                        <li>Menu upload for instant analysis</li>
+                        <li>Learn your preferences over time</li>
+                    </ul>
+                </article>
+
+                <article class="concept-card">
+                    <div class="concept-number">06</div>
+                    <h3>FoodPrint</h3>
+                    <p class="concept-hook">Track the environmental and ethical impact of your food choices — carbon, water, and animal welfare.</p>
+                    <div class="concept-tags">
+                        <span class="tag primary">Sustainability</span>
+                        <span class="tag">Ethical</span>
+                        <span class="tag">Impact</span>
+                    </div>
+                    <ul class="concept-features">
+                        <li>Carbon footprint per dish</li>
+                        <li>Water usage and land impact</li>
+                        <li>Animal welfare ratings</li>
+                        <li>Track your monthly FoodPrint score</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="problem">
+        <div class="container">
+            <div class="problem-content">
+                <div class="problem-text">
+                    <h2>The Problem</h2>
+                    <p>Diners face information asymmetry at restaurants. They cannot reliably assess nutritional content, allergen risks, or ingredient quality before ordering. Current solutions require manual lookup or guesswork, creating friction, health risks, and decision paralysis.</p>
+                    <p><strong>The challenge:</strong> Delivering accurate, contextualized food intelligence at the moment of decision without disrupting the dining experience.</p>
+                </div>
+                <div class="problem-stats">
+                    <div class="stat">
+                        <span class="stat-number">32M</span>
+                        <span class="stat-label">Americans with food allergies</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">46%</span>
+                        <span class="stat-label">Track macros, not just calories</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">10sec</span>
+                        <span class="stat-label">Max wait time at the table</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">#1</span>
+                        <span class="stat-label">Reason diets fail: eating out</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq">
+        <div class="container">
+            <div class="section-header">
+                <h2>Common Questions</h2>
+            </div>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question">Which concept is most viable?</div>
+                    <div class="faq-answer">Each targets different users: <strong>MenuLens</strong> for health-conscious millennials (broadest appeal), <strong>AllergenAlert</strong> for safety-critical use (highest willingness to pay), <strong>MacroMatch</strong> for fitness enthusiasts (existing tracking behavior). The MVP approach would start with one and expand.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">How accurate is the nutrition data?</div>
+                    <div class="faq-answer">For chain restaurants, official data is 95-99% accurate. For independent restaurants, AI estimation combined with crowd verification achieves 85-90% accuracy. All concepts show confidence levels so users understand the reliability of each result.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Do restaurants need to participate?</div>
+                    <div class="faq-answer">No — that's the key innovation. These solutions work anywhere via AI estimation, crowdsourcing, and computer vision. Restaurants <em>can</em> claim their listings for verified badges (B2B revenue), but user value doesn't depend on restaurant adoption.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">What's the business model?</div>
+                    <div class="faq-answer">Freemium for viral growth: basic features free, premium subscriptions ($5-8/month) for advanced features, integrations, and family plans. B2B revenue from restaurant certifications and verified data programs.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Is allergen data safe to rely on?</div>
+                    <div class="faq-answer">For severe allergies, these tools provide informed questions to ask — but always confirm with restaurant staff. Cross-contamination risks can't be detected through data alone. We always recommend confirming for severe allergies.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2>Ready to solve menu transparency?</h2>
+            <p>These six concepts represent different approaches to the same problem. Pick one, combine them, or build something entirely new. The market is waiting.</p>
+            <a href="https://github.com/unnamedmistress/workspace" class="cta-button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.53 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                </svg>
+                View on GitHub
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Generated by Inventive Lab + Creative Assembly Line • <a href="https://github.com/unnamedmistress/workspace" style="color: var(--gray);">GitHub</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Simple FAQ accordion
+        document.querySelectorAll('.faq-question').forEach(q => {
+            q.addEventListener('click', () => {
+                q.parentElement.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
 </html>

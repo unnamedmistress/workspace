@@ -1,0 +1,1061 @@
+{
+  "input_problem": {
+    "raw_user_input": "MenuSpy - a food/menu analysis app. Problem: People want to understand what's in their food when eating out - calories, allergens, nutrition, ingredients. But restaurant menus don't provide this information clearly.",
+    "reframed_problem": "Diners face information asymmetry at restaurants: they cannot reliably assess nutritional content, allergen risks, or ingredient quality before ordering. Current solutions require manual lookup or guesswork, creating friction, health risks, and decision paralysis. The challenge is delivering accurate, contextualized food intelligence at the moment of decision without disrupting the dining experience.",
+    "key_objectives": [
+      "Provide instant, accurate nutritional and allergen data for restaurant menu items",
+      "Minimize friction and preserve the natural dining flow",
+      "Build trust through transparency and verifiable sources",
+      "Scale across diverse restaurant types and cuisines without requiring universal restaurant participation",
+      "Empower users with different needs (allergies, diets, fitness goals) with personalized insights"
+    ],
+    "hard_constraints": [
+      "Menu items vary by location, preparation method, and chef discretion",
+      "Restaurants are not legally required to provide detailed nutrition data (except chains >20 locations in some jurisdictions)",
+      "Users need answers in <10 seconds at the table, not after extensive research",
+      "Cannot rely on restaurants updating data in real-time",
+      "Must handle ambiguity (\"market vegetables\", \"chef's special sauce\") gracefully"
+    ]
+  },
+  "global_insights": {
+    "opportunity_space_summary": "The gap between regulatory disclosure requirements and consumer demand for food transparency creates a massive opportunity. While large chains must disclose calories, independent restaurants and international cuisines remain opaque. The rise of dietary personalization (keto, vegan, low-FODMAP), serious allergy concerns, and fitness tracking culture creates strong willingness to pay for instant intelligence. Opportunity exists in B2C (direct to diners), B2B (restaurants wanting to differentiate), and B2B2C (delivery platforms, health apps).",
+    "common_themes_across_ideas": "Most viable solutions combine crowdsourcing, AI estimation, and strategic data partnerships rather than waiting for full restaurant adoption. Success depends on managing uncertainty transparently — users will tolerate estimates if confidence levels are clear. Strong network effects emerge when user contributions improve data quality. Privacy-conscious approaches (local processing, anonymous aggregation) build trust. Integration points with existing behaviors (taking menu photos, scanning QR codes) reduce activation energy.",
+    "major_risks_or_unknowns": "Accuracy liability: incorrect allergen data could cause serious harm. Data freshness: menus change seasonally, recipes evolve. Restaurant resistance: some may view nutritional transparency as competitive disadvantage. User trust: one wrong call on allergen data destroys credibility. Monetization timing: charging too early limits network effects, but free forever is unsustainable. Regulatory uncertainty: laws may require disclaimers that scare users away."
+  },
+  "ideas": [
+    {
+      "id": 1,
+      "idea_name": "MenuLens",
+      "one_sentence_hook": "Point your phone at any menu and instantly see calories, allergens, and nutrition overlaid on each dish using computer vision and crowd-verified data.",
+      "concept_summary": {
+        "problem_insight": "The friction isn't finding information—it's the context switch. Diners don't want to leave the menu, open an app, search, and cross-reference. They want the intelligence exactly where they're already looking: on the menu itself.",
+        "core_solution": "MenuLens uses on-device computer vision to recognize menu text (via OCR) and dish images, then overlays nutrition badges (calories, protein, common allergens) directly on the camera viewfinder in real-time, like AR translation apps. Backend combines restaurant-provided data where available, FDA datasets for ingredients, and crowd-verified estimates for independent restaurants. Users can tap any dish for deeper breakdowns and ingredient lists.",
+        "target_users": "Health-conscious millennials and Gen Z diners who already use their phones at restaurants, people managing chronic conditions (diabetes, celiac), fitness enthusiasts tracking macros, parents with allergic children, travelers navigating foreign cuisines.",
+        "why_it_would_work": "Zero behavior change required beyond pointing your camera—no typing, no searching. On-device processing means instant response (<2 sec latency). Crowd verification creates network effects: the more users scan menus, the better the database. Freemium model allows viral growth. Restaurants can claim/verify their data for accuracy badge, creating B2B revenue stream.",
+        "what_makes_it_different": "Unlike search-based apps (MyFitnessPal, CalorieKing), there's no manual lookup. Unlike restaurant-dependent platforms, it works anywhere via estimation + crowdsourcing. Unlike pure AI guessing, it shows confidence levels and lets users flag errors, building trust through transparency."
+      },
+      "delivery_over_the_web": {
+        "high_level_flow": "User opens web app (Progressive Web App for camera access), grants camera permission, points at menu. Real-time OCR + dish recognition runs on-device (TensorFlow.js or WASM). Recognized dishes sent to backend API for nutrition lookup. Response returns overlays rendered on camera feed. User can tap dish for detail modal. Anonymous usage data improves ML models.",
+        "key_interactions": [
+          "Camera viewfinder with real-time overlay (AR-style nutrition badges)",
+          "Tap dish for detailed nutrition panel (macros, vitamins, allergens, ingredients)",
+          "Swipe up for personal diet filters (vegan, keto, gluten-free, allergen alerts)",
+          "Flag incorrect data button → crowdsourced corrections",
+          "Save favorite dishes to personal meal log",
+          "Restaurant claim flow (for owners to verify/update data)"
+        ],
+        "offline_or_hybrid_components": [
+          "Download regional restaurant databases for offline OCR matching",
+          "On-device ML model for dish recognition (update monthly via background sync)",
+          "Local cache of user's dietary restrictions and allergen profile",
+          "Fallback: if offline, show cached data + 'data may be outdated' banner"
+        ],
+        "tech_simplicity_notes": "Start with PWA (avoids app store friction). Use existing OCR APIs (Google Vision, Tesseract.js) for MVP, then fine-tune custom model. Nutrition database: seed with USDA Standard Reference + chain restaurant open data + web scraping (legal gray area, monitor). Crowdsourcing: simple upvote/downvote + photo submission. Scale challenge is image processing cost; mitigate with on-device processing and CDN caching."
+      },
+      "one_page_site": {
+        "purpose": "pitch_and_access_point",
+        "structure": {
+          "hero": {
+            "heading": "Know What You're Eating, Before You Order",
+            "subheading": "Point your camera at any menu and see calories, allergens, and nutrition instantly—no typing, no guessing.",
+            "primary_call_to_action": "Try MenuLens Now (Open Camera)"
+          },
+          "sections": [
+            {
+              "id": "how-it-works",
+              "title": "See Your Food's Story",
+              "body_copy": "MenuLens uses your phone's camera to recognize dishes on any menu and overlays nutrition info in real-time. Like a food X-ray, but actually useful.",
+              "bullets": [
+                "Instant overlay: calories, protein, carbs, allergens",
+                "Tap any dish for full ingredients and nutrition breakdown",
+                "Crowd-verified data gets better with every scan",
+                "Works at chains, local spots, and food trucks"
+              ]
+            },
+            {
+              "id": "who-its-for",
+              "title": "Built for Real Diners",
+              "body_copy": "Whether you're managing allergies, hitting macros, or just curious what's in that sauce, MenuLens gives you the power to eat informed.",
+              "bullets": [
+                "Parents with allergic kids: scan menus for hidden allergens",
+                "Fitness enthusiasts: track macros without breaking flow",
+                "Diet-conscious eaters: filter for vegan, keto, low-carb",
+                "Travelers: decode unfamiliar cuisines safely"
+              ]
+            },
+            {
+              "id": "trust",
+              "title": "Accuracy You Can Trust",
+              "body_copy": "We combine official restaurant data, USDA databases, and community verification. Every result shows confidence level. Flag errors and help improve the system.",
+              "bullets": [
+                "Restaurant-verified data when available",
+                "Crowd-verified estimates for independent spots",
+                "Transparent confidence scores (High/Medium/Low)",
+                "Report errors instantly to improve accuracy"
+              ]
+            },
+            {
+              "id": "cta",
+              "title": "Start Scanning",
+              "body_copy": "No download, no signup. Just open your camera and point at a menu. It's that simple.",
+              "bullets": [
+                "Free for basic nutrition (calories, protein, carbs)",
+                "Pro: allergen alerts, meal logging, custom diet filters ($4.99/month)",
+                "Restaurants: claim your menu for free, premium verification available"
+              ]
+            }
+          ],
+          "faq": [
+            {
+              "question": "How accurate is the nutrition data?",
+              "answer": "For chain restaurants, we use official data (99% accurate). For independent restaurants, we use AI estimates combined with crowd verification (typically 85-90% accurate). We always show confidence levels so you know what you're getting."
+            },
+            {
+              "question": "Does it work offline?",
+              "answer": "Yes, partially. Once you've scanned a menu, the data is cached locally. The OCR recognition works offline with downloaded models. You'll need connection for new restaurants."
+            },
+            {
+              "question": "What about allergen safety?",
+              "answer": "We flag common allergens (gluten, dairy, nuts, soy, shellfish) but always recommend confirming with restaurant staff for severe allergies. Cross-contamination can't be detected through data."
+            },
+            {
+              "question": "Can restaurants update their data?",
+              "answer": "Yes! Restaurants can claim their listing, upload official nutrition data, and earn a 'Verified' badge. It's free for basic claims, with premium support for multi-location chains."
+            },
+            {
+              "question": "Do you share my data?",
+              "answer": "No. Scanning is anonymous. If you create an account for meal logging, your data is encrypted and never sold. We aggregate anonymous usage to improve dish recognition, but never track individuals."
+            }
+          ]
+        },
+        "tone_and_style": "Friendly but not cutesy. Emphasis on utility and trust. Use food photography as backgrounds. Nutrition overlays shown in mockup screenshots. Clean sans-serif fonts (Inter, Poppins). Soft green/blue palette (health without clinical coldness). Mobile-first layout.",
+        "index_html_suggestion": "Single-page scrollable layout. Sticky header with 'Try Now' CTA. Hero section with animated GIF/video showing camera scan → overlay appearing. Three-column feature grid. Testimonials from beta users. FAQ accordion. Footer with restaurant claim link and privacy policy."
+      },
+      "visuals": {
+        "hero_image_prompt": "Close-up POV shot of a smartphone held above a restaurant menu on a wooden table, with AR-style glowing green nutrition badges (calories, protein icon, allergen warning icon) floating above menu items, soft natural light, shallow depth of field, modern clean aesthetic, no people visible, photorealistic",
+        "supporting_image_prompts": [
+          "Diverse group of young adults at a casual restaurant table, one person holding phone pointing at menu, others looking interested and engaged, warm ambient lighting, candid documentary style",
+          "Split screen: left side shows plain restaurant menu, right side shows same menu with colorful nutrition overlays and confidence level indicators, infographic style, clean modern design",
+          "Close-up of phone screen showing MenuLens interface with detailed nutrition breakdown panel: macros pie chart, ingredient list, allergen warnings highlighted in amber, professional app UI design"
+        ]
+      },
+      "research_references": [
+        {
+          "claim_or_topic": "FDA menu labeling requirements for chain restaurants (20+ locations)",
+          "source_title": "Menu Labeling Requirements | FDA",
+          "source_type": "government",
+          "url": "https://www.fda.gov/food/food-labeling-nutrition/menu-labeling-requirements"
+        },
+        {
+          "claim_or_topic": "Food allergy prevalence (32 million Americans have food allergies)",
+          "source_title": "Food Allergy Facts and Statistics | FARE",
+          "source_type": "nonprofit",
+          "url": "https://www.foodallergy.org/resources/facts-and-statistics"
+        },
+        {
+          "claim_or_topic": "Growth of fitness tracking and macro counting apps",
+          "source_title": "Fitness App Market Size, Share & Trends Analysis Report",
+          "source_type": "market_research",
+          "url": "https://www.grandviewresearch.com/industry-analysis/fitness-app-market"
+        }
+      ],
+      "agent_contributions": [
+        {
+          "agent_role": "Visionary Innovator",
+          "contribution_summary": "Core concept of AR overlay for immediate context (vs. search-based lookup), combining crowd verification with AI estimation to work without restaurant buy-in."
+        },
+        {
+          "agent_role": "Systems Analyst",
+          "contribution_summary": "Identified accuracy liability risk and solution (confidence levels + crowd flagging), offline mode requirement, and restaurant claim/verification path for B2B revenue."
+        },
+        {
+          "agent_role": "Market Strategist",
+          "contribution_summary": "Target user segmentation (allergies, fitness, families, travelers), freemium model for viral growth, network effects through crowdsourcing."
+        },
+        {
+          "agent_role": "Tech Architect",
+          "contribution_summary": "PWA approach for camera access without app store friction, on-device processing for speed, caching strategy for offline, CDN cost mitigation."
+        },
+        {
+          "agent_role": "Visual Story Designer",
+          "contribution_summary": "Name 'MenuLens' (visual + utility), hook emphasizing zero-friction, tone of transparency + trust, mockup visuals showing AR overlay."
+        },
+        {
+          "agent_role": "Researcher",
+          "contribution_summary": "FDA labeling regulations, food allergy statistics, fitness app market growth trends."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "idea_name": "AllergenAlert",
+      "one_sentence_hook": "Text or scan any dish name and get instant allergen warnings personalized to your profile—because one wrong ingredient can ruin more than your meal.",
+      "concept_summary": {
+        "problem_insight": "For people with severe allergies, eating out is legitimately dangerous. Asking servers is unreliable (they may not know cross-contamination risks). Reading menus is insufficient (ingredients hidden in sauces, marinades). Existing allergy apps require extensive manual input. The problem isn't just information—it's speed and personalization under pressure.",
+        "core_solution": "AllergenAlert is a dead-simple SMS/web interface: text a dish name (or scan QR code at table), receive immediate allergen risk assessment personalized to your saved profile (e.g., 'Contains tree nuts, may contain soy'). Backend uses NLP to parse dish names, cross-references ingredient databases + user allergen profile, and returns risk level (Safe/Caution/Danger). Users can save profiles for family members. Restaurants can integrate QR codes on menus linking directly to their verified data.",
+        "target_users": "People with severe food allergies (especially parents of allergic children), celiac disease sufferers, individuals with religious dietary restrictions (halal, kosher), people with autoimmune conditions requiring strict elimination diets.",
+        "why_it_would_work": "Friction is near-zero: text message or QR scan takes <10 seconds. Personalization removes cognitive load (user doesn't analyze ingredient list, app just says 'DANGER: contains peanuts'). Focus on allergies (high-stakes, clear need) creates intense loyalty. Freemium: free for basic allergen checks, paid for multi-profile families and advanced sensitivities. B2B: allergy-friendly restaurant certification program.",
+        "what_makes_it_different": "Unlike general nutrition apps, laser-focused on allergen safety = higher trust. Unlike restaurant-only solutions, works anywhere via estimation. SMS interface means no app download required (critical for older users, international travelers with data limits). Risk-level framing (not just ingredient lists) respects user's urgency."
+      },
+      "delivery_over_the_web": {
+        "high_level_flow": "User texts dish name to dedicated number OR scans restaurant QR code (links to web form pre-filled with restaurant ID). Backend NLP extracts dish identity, queries ingredient database, cross-checks against user's allergen profile (retrieved via phone number or session). Response sent via SMS or web page with risk assessment (Safe/Caution/Danger) + specific allergens detected. User can request detailed ingredient list as follow-up.",
+        "key_interactions": [
+          "SMS interface: Text 'Caesar salad at Olive Garden' → receive 'CAUTION: Contains fish (anchovies), dairy, gluten'",
+          "QR scan: Opens web page with restaurant menu, tap dish → instant allergen check",
+          "Profile setup: Web form to save allergen profile (link sent via SMS), supports multiple profiles (family)",
+          "Restaurant report: Flag missing/incorrect allergen data directly from result page",
+          "Certification badge: Restaurants can display 'AllergenAlert Verified' badge after data review"
+        ],
+        "offline_or_hybrid_components": [
+          "SMS fallback (works without internet if carrier supports SMS-to-web gateway)",
+          "Downloadable allergen profile card (PDF) for showing servers, includes QR code linking to profile",
+          "Restaurant partnerships: physical QR code stickers on menus, table tents",
+          "Emergency card: printable wallet card with profile + AllergenAlert number"
+        ],
+        "tech_simplicity_notes": "SMS gateway via Twilio or similar. Web app for profile management (simple CRUD). NLP: use GPT-4 API for dish parsing ('Caesar salad' → ingredients: lettuce, parmesan, anchovies, croutons, etc.), then rule-based allergen matching. Database: seed with FDA allergen data + chain menus + crowdsourced additions. Scale bottleneck is API cost for NLP; cache common dishes aggressively. HIPAA considerations: allergen profiles are health data—ensure compliance."
+      },
+      "one_page_site": {
+        "purpose": "pitch_and_access_point",
+        "structure": {
+          "hero": {
+            "heading": "Eat Safely, Anywhere",
+            "subheading": "Text any dish name and get instant allergen warnings personalized to your needs. No app, no guessing, no risk.",
+            "primary_call_to_action": "Create Free Profile"
+          },
+          "sections": [
+            {
+              "id": "how-it-works",
+              "title": "Three Steps to Safety",
+              "body_copy": "AllergenAlert is designed for speed when it matters most: at the table, making a decision.",
+              "bullets": [
+                "1. Set up your allergen profile (one-time, takes 2 minutes)",
+                "2. Text any dish name to our number or scan restaurant QR code",
+                "3. Get instant risk assessment (Safe/Caution/Danger) + specific allergens"
+              ]
+            },
+            {
+              "id": "who-needs-this",
+              "title": "Built for Serious Allergies",
+              "body_copy": "If you or someone you love has severe food allergies, you know eating out is stressful. We take that stress away.",
+              "bullets": [
+                "Parents of allergic children: check every dish instantly",
+                "Severe allergy sufferers: gluten, nuts, shellfish, dairy",
+                "Multiple allergies: save profiles for whole family",
+                "Travelers: works internationally via SMS"
+              ]
+            },
+            {
+              "id": "trust-and-accuracy",
+              "title": "Your Safety Is Our Mission",
+              "body_copy": "We combine verified restaurant data, FDA databases, and expert review. Every result shows confidence level. Always confirm with restaurant staff for severe allergies.",
+              "bullets": [
+                "Restaurant-verified data where available",
+                "AI-assisted estimation for independent restaurants",
+                "Community-flagged errors reviewed within 24 hours",
+                "Transparent risk levels: Safe (green), Caution (yellow), Danger (red)"
+              ]
+            },
+            {
+              "id": "pricing",
+              "title": "Free to Start, Serious About Value",
+              "body_copy": "Basic allergen checks are free forever. Upgrade for advanced features.",
+              "bullets": [
+                "Free: Single profile, common allergens (gluten, dairy, nuts, shellfish, soy)",
+                "Family Plan ($6.99/month): Up to 5 profiles, all allergens, priority support",
+                "Restaurant Certification ($99/year): Verify your menu, earn trust badge"
+              ]
+            }
+          ],
+          "faq": [
+            {
+              "question": "How fast is the response?",
+              "answer": "Typically under 10 seconds. SMS responses are instant once backend processes the request. QR scans are real-time."
+            },
+            {
+              "question": "What if the data is wrong?",
+              "answer": "We show confidence levels for every result. If you spot an error, flag it directly from the response. We review flagged items within 24 hours. Always ask restaurant staff to confirm for severe allergies."
+            },
+            {
+              "question": "Does this replace talking to my server?",
+              "answer": "No. AllergenAlert gives you informed questions to ask. Always confirm with restaurant staff, especially for severe allergies and cross-contamination risks."
+            },
+            {
+              "question": "Can I use this internationally?",
+              "answer": "Yes, SMS works internationally (standard carrier rates apply). We're expanding dish databases to cover major cuisines globally."
+            },
+            {
+              "question": "Is my health data private?",
+              "answer": "Absolutely. Your allergen profile is encrypted and never sold. We're HIPAA-compliant. Only you control your data. Delete your profile anytime."
+            }
+          ]
+        },
+        "tone_and_style": "Serious, protective, empowering. This is about safety, not lifestyle. Use red/green color coding for risk levels. Include real user testimonials from allergy community. Medical-grade trust signals (certifications, expert advisors). Mobile-first, accessibility-focused (high contrast, screen reader support).",
+        "index_html_suggestion": "Single-page layout. Hero with bold risk-level color coding (Safe green/Danger red example). Two-column 'How it works' with phone mockup showing SMS exchange. Testimonial section with photos of families. Trust section with medical advisor headshots. Pricing table. FAQ. Footer with emergency resources and support links."
+      },
+      "visuals": {
+        "hero_image_prompt": "Close-up of parent's hand holding smartphone showing text message interface with green 'SAFE' message and allergen check results, with blurred restaurant table and child in background, warm protective mood, photorealistic, shallow depth of field",
+        "supporting_image_prompts": [
+          "Split screen comparison: left shows stressed parent reading menu with confused expression, right shows same parent confidently smiling while looking at phone with green 'Safe' notification, documentary style",
+          "Smartphone screen mockup showing AllergenAlert interface with red 'DANGER' warning, specific allergens highlighted (tree nuts, shellfish), clean medical UI design, high contrast colors",
+          "Restaurant table tent with QR code and AllergenAlert logo, text says 'Check allergens instantly', modern clean branding, professional food service setting"
+        ]
+      },
+      "research_references": [
+        {
+          "claim_or_topic": "32 million Americans have food allergies, including 5.6 million children",
+          "source_title": "Food Allergy Facts and Statistics | FARE",
+          "source_type": "nonprofit",
+          "url": "https://www.foodallergy.org/resources/facts-and-statistics"
+        },
+        {
+          "claim_or_topic": "Cross-contamination is a major risk factor in restaurants",
+          "source_title": "Food Allergy & Anaphylaxis Emergency Care Plan",
+          "source_type": "medical",
+          "url": "https://www.foodallergy.org/resources/anaphylaxis-emergency-action-plan"
+        },
+        {
+          "claim_or_topic": "Text message penetration rate (>90% in US, works on basic phones)",
+          "source_title": "Mobile Fact Sheet | Pew Research Center",
+          "source_type": "research",
+          "url": "https://www.pewresearch.org/internet/fact-sheet/mobile/"
+        }
+      ],
+      "agent_contributions": [
+        {
+          "agent_role": "Visionary Innovator",
+          "contribution_summary": "SMS-first approach (zero app friction), focus on allergies only (narrow but high-stakes), risk-level framing instead of raw data."
+        },
+        {
+          "agent_role": "Systems Analyst",
+          "contribution_summary": "HIPAA compliance requirement, confidence level display to manage liability, emergency card as offline backup, restaurant certification for B2B revenue."
+        },
+        {
+          "agent_role": "Market Strategist",
+          "contribution_summary": "Target severe allergy sufferers (intense pain point = loyalty), family plan pricing model, restaurant partnerships for QR code placement."
+        },
+        {
+          "agent_role": "Tech Architect",
+          "contribution_summary": "Twilio SMS gateway, GPT-4 for NLP dish parsing, caching strategy for cost control, CRUD web app for profile management."
+        },
+        {
+          "agent_role": "Visual Story Designer",
+          "contribution_summary": "Name 'AllergenAlert' (clear, urgent), safety-first tone, red/green color coding for risk, testimonials from allergy community."
+        },
+        {
+          "agent_role": "Researcher",
+          "contribution_summary": "Food allergy prevalence statistics, cross-contamination risks, SMS penetration rate (supports no-app strategy)."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "idea_name": "MacroMatch",
+      "one_sentence_hook": "Set your daily macro targets, scan restaurant menus, and see which dishes fit your goals—like a personal nutritionist in your pocket.",
+      "concept_summary": {
+        "problem_insight": "Fitness enthusiasts and people on structured diets (keto, bodybuilding, medical) track macros religiously at home but give up when eating out because the mental math is overwhelming. They need instant 'does this fit my plan?' answers, not raw nutrition data they have to interpret under pressure.",
+        "core_solution": "MacroMatch lets users set daily macro targets (protein, carbs, fat, calories) and remaining budget ('500 calories, 40g protein left today'). When scanning a menu (via camera or manual search), dishes are color-coded: green (fits budget), yellow (partial fit), red (over budget). Users can tap to see exactly how a dish affects their remaining macros. One-tap logging syncs to MyFitnessPal, Fitbit, Apple Health. Restaurants can offer 'MacroMatch Certified' meals with guaranteed accuracy.",
+        "target_users": "Bodybuilders and athletes tracking macros, people on medical diets (diabetes, kidney disease), keto/paleo dieters, weight loss app users (MyFitnessPal, Noom), busy professionals who meal prep but occasionally eat out.",
+        "why_it_would_work": "Solves the 'mental math at the table' problem that derails diet adherence. Color-coding provides instant decision-making (no spreadsheet required). Integration with existing tracking apps eliminates double-entry. Network effects: users submit macro data for dishes, improving database. Freemium: free for basic macro tracking, premium for integrations and restaurant certifications. B2B: health-conscious restaurants pay for certification.",
+        "what_makes_it_different": "Unlike general nutrition apps (show data but don't interpret), MacroMatch makes the decision for you ('this fits your plan'). Unlike restrictive diet apps (no flexibility), works with any macro split. Unlike restaurant-only solutions, aggregates data from all sources. Unlike manual tracking (tedious), one-tap logging."
+      },
+      "delivery_over_the_web": {
+        "high_level_flow": "User sets up macro targets via onboarding wizard or imports from tracking app. Opens MacroMatch web app, scans menu or browses restaurant. Dishes displayed with color-coded badges (green/yellow/red) based on remaining macro budget. Tap dish to see macro breakdown + 'How this affects your day' projection. One-tap 'Log this meal' button syncs to connected apps (MyFitnessPal, Fitbit, etc.). Daily summary shows remaining macros, suggests dishes that fit.",
+        "key_interactions": [
+          "Macro target setup: sliders for protein/carbs/fat targets, or import from MyFitnessPal",
+          "Menu scan: camera OCR or restaurant search",
+          "Color-coded dish cards: green = fits budget, yellow = over on one macro, red = significantly over",
+          "Dish detail modal: full macro breakdown, remaining budget projection, similar dishes that fit better",
+          "One-tap logging: 'Log to MyFitnessPal' button (OAuth integration)",
+          "Daily dashboard: remaining macros, meal history, streak counter"
+        ],
+        "offline_or_hybrid_components": [
+          "Downloaded restaurant databases for offline scanning",
+          "Local macro budget calculations (no backend needed)",
+          "Sync queue: logs meals locally, syncs to connected apps when online",
+          "Manual entry form for off-the-grid restaurants"
+        ],
+        "tech_simplicity_notes": "PWA for camera access and offline. OAuth integrations for MyFitnessPal API, Fitbit API, Apple HealthKit (requires native wrapper for iOS). Nutrition database: same as MenuLens (USDA + chain data + crowdsourced). Color-coding algorithm: simple macro budget subtraction. Backend: Node.js API, PostgreSQL for user profiles and meal logs. CDN for restaurant data. Cost: API integration maintenance is ongoing burden."
+      },
+      "one_page_site": {
+        "purpose": "pitch_and_access_point",
+        "structure": {
+          "hero": {
+            "heading": "Eat Out Without Blowing Your Macros",
+            "subheading": "See which restaurant dishes fit your daily targets instantly. No math, no guessing, no diet guilt.",
+            "primary_call_to_action": "Set My Macros"
+          },
+          "sections": [
+            {
+              "id": "how-it-works",
+              "title": "Your Macro Budget, Visualized",
+              "body_copy": "MacroMatch turns complex nutrition math into simple green/yellow/red signals. You set your targets, we do the rest.",
+              "bullets": [
+                "Set daily macro targets (protein, carbs, fat) or import from MyFitnessPal",
+                "Scan any menu—dishes are color-coded based on your remaining budget",
+                "Green = fits your plan, yellow = close, red = way over",
+                "One-tap logging syncs to your tracking app automatically"
+              ]
+            },
+            {
+              "id": "who-its-for",
+              "title": "Built for Macro Trackers",
+              "body_copy": "If you track macros at home, you deserve the same control when eating out.",
+              "bullets": [
+                "Bodybuilders and athletes: hit protein targets without overcomplicating",
+                "Keto/paleo dieters: find low-carb options instantly",
+                "Weight loss journeys: stay in calorie budget while enjoying restaurants",
+                "Medical diets: manage diabetes, kidney disease with precise tracking"
+              ]
+            },
+            {
+              "id": "integrations",
+              "title": "Works With What You Already Use",
+              "body_copy": "MacroMatch syncs with your existing tracking apps. No double-entry, no disruption.",
+              "bullets": [
+                "MyFitnessPal: import targets, one-tap meal logging",
+                "Fitbit: sync meals to daily nutrition dashboard",
+                "Apple Health: automatic calorie and macro updates",
+                "Noom, Lose It, Cronometer: more integrations coming soon"
+              ]
+            },
+            {
+              "id": "pricing",
+              "title": "Free to Track, Premium to Sync",
+              "body_copy": "Basic macro tracking is free. Upgrade for integrations and advanced features.",
+              "bullets": [
+                "Free: Manual macro targets, color-coded dishes, basic logging",
+                "Pro ($7.99/month): MyFitnessPal/Fitbit/Health sync, meal suggestions, streak tracking",
+                "Restaurants ($149/year): 'MacroMatch Certified' badge, verified data, menu analytics"
+              ]
+            }
+          ],
+          "faq": [
+            {
+              "question": "How accurate is the color-coding?",
+              "answer": "We use the same nutrition data as major tracking apps (USDA + restaurant-provided). Accuracy varies by restaurant: chains are 95%+ accurate, independent restaurants are estimates (we show confidence levels). Always check official restaurant nutrition if available."
+            },
+            {
+              "question": "Can I customize my macro split?",
+              "answer": "Yes! Set any protein/carbs/fat ratio you want. Or import your targets from MyFitnessPal to stay in sync."
+            },
+            {
+              "question": "What if a dish is 'yellow' (partial fit)?",
+              "answer": "Yellow means it goes over on one macro but fits the others. Tap for details—you might be over on carbs but still have plenty of protein and fat budget. You decide if it's worth the tradeoff."
+            },
+            {
+              "question": "Does this work for vegetarian/vegan diets?",
+              "answer": "Yes! Filter for vegetarian, vegan, or any dietary preference. Color-coding still applies based on your macro targets."
+            },
+            {
+              "question": "Do I need a MyFitnessPal account?",
+              "answer": "No, MacroMatch works standalone. But if you already use MyFitnessPal (or Fitbit, etc.), syncing saves you time and keeps everything in one place."
+            }
+          ]
+        },
+        "tone_and_style": "Motivational but practical. Emphasis on control and adherence. Use fitness/health imagery (active people, fresh food, gym context). Color-coding prominently displayed in mockups. Clean, modern UI (Tailwind-style). Green/yellow/red palette (avoid 'diet shame' language—frame as empowerment).",
+        "index_html_suggestion": "Hero with animated macro budget visualization (circular gauges filling/emptying). Three-column 'How it works' with phone mockups. Integration logos (MyFitnessPal, Fitbit, Apple Health). Before/after testimonial: 'I used to avoid restaurants on cut days, now I eat out 3x/week and still hit my macros.' Pricing table. FAQ. Footer with community forum link."
+      },
+      "visuals": {
+        "hero_image_prompt": "Smartphone screen showing restaurant menu with green, yellow, and red color-coded dish cards, circular macro budget gauges at top (protein, carbs, fat), clean modern fitness app UI, bright natural lighting, food photography in background, photorealistic",
+        "supporting_image_prompts": [
+          "Fit athletic person at restaurant table holding phone with MacroMatch app open, looking confident and relaxed, healthy meal in front of them, bright aspirational lifestyle photography",
+          "Split screen mockup: left shows MyFitnessPal daily summary, right shows MacroMatch dish card with 'Log to MyFitnessPal' button highlighted, clean app UI design, integration concept",
+          "Macro budget dashboard with circular progress gauges (protein 120g, carbs 200g, fat 60g), partially filled in green, clean modern data visualization, minimalist design"
+        ]
+      },
+      "research_references": [
+        {
+          "claim_or_topic": "46% of fitness app users track macros (not just calories)",
+          "source_title": "Fitness App User Behavior Report 2023",
+          "source_type": "market_research",
+          "url": "https://www.statista.com/statistics/fitness-app-usage/"
+        },
+        {
+          "claim_or_topic": "Eating out is the #1 reason people abandon diet tracking",
+          "source_title": "Why People Quit Dieting | NIH Study",
+          "source_type": "research",
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/diet-adherence/"
+        },
+        {
+          "claim_or_topic": "MyFitnessPal has 200+ million users (integration opportunity)",
+          "source_title": "MyFitnessPal User Statistics",
+          "source_type": "company_data",
+          "url": "https://www.myfitnesspal.com/about"
+        }
+      ],
+      "agent_contributions": [
+        {
+          "agent_role": "Visionary Innovator",
+          "contribution_summary": "Color-coding for instant decision-making (vs. raw data), 'does this fit my plan?' framing, integration with existing tracking apps (reduces friction)."
+        },
+        {
+          "agent_role": "Systems Analyst",
+          "contribution_summary": "OAuth integration requirements, offline sync queue for logging, confidence levels for estimated data, restaurant certification for B2B."
+        },
+        {
+          "agent_role": "Market Strategist",
+          "contribution_summary": "Target macro-tracking fitness enthusiasts (existing behavior = low friction), freemium model (free basic, paid integrations), network effects via crowdsourced data."
+        },
+        {
+          "agent_role": "Tech Architect",
+          "contribution_summary": "PWA for offline mode, API integrations (MyFitnessPal, Fitbit, HealthKit), local macro calculations, PostgreSQL for user profiles."
+        },
+        {
+          "agent_role": "Visual Story Designer",
+          "contribution_summary": "Name 'MacroMatch' (fitness-centric), color-coding visualization, motivational tone, fitness lifestyle imagery."
+        },
+        {
+          "agent_role": "Researcher",
+          "contribution_summary": "Macro tracking prevalence, diet abandonment due to eating out, MyFitnessPal user base (validates integration strategy)."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "idea_name": "DishDecoder",
+      "one_sentence_hook": "Crowdsourced restaurant nutrition database where every scan improves the data—like Waze for food transparency.",
+      "concept_summary": {
+        "problem_insight": "The fundamental blocker to restaurant nutrition data is that restaurants won't provide it unless legally required. Waiting for regulation is slow. The alternative is crowdsourcing: millions of diners collectively know more about what's in restaurant food than any single database could capture. The challenge is incentivizing contribution without making it feel like work.",
+        "core_solution": "DishDecoder is a crowdsourced nutrition database where users submit photos of menu items (before/after cooking), ingredients lists (when available), and verified nutrition data (from rare menus that include it). AI analyzes photos to estimate portion size and ingredients. Users upvote/downvote accuracy. Gamification: earn 'Contributor' badges, unlock premium features by submitting verified data, leaderboards for most helpful contributors. Restaurants can claim/verify listings for 'Official' badge. Data is open-access (API available for other apps).",
+        "target_users": "Health-conscious diners who already take food photos (for social media or tracking), nutrition enthusiasts who like 'helping others', independent restaurants that want transparency but lack resources for lab testing, developers building food/health apps who need data.",
+        "why_it_would_work": "Crowdsourcing has proven successful for maps (Waze, Google Maps), translations (Duolingo), and restaurant reviews (Yelp). Food photography is already ubiquitous (Instagram). Gamification creates engagement loop: contribute → earn badges → unlock features → contribute more. Open API creates ecosystem of apps using the data, expanding reach. Network effects: more users = more data = more accurate = more valuable = more users.",
+        "what_makes_it_different": "Unlike proprietary databases (MyFitnessPal, CalorieKing), this is open-access and community-built. Unlike passive apps (just consume data), users actively improve the system. Unlike restaurant-dependent solutions, works for any establishment. Unlike unverified data (Reddit threads), has voting and review system for quality control."
+      },
+      "delivery_over_the_web": {
+        "high_level_flow": "User searches for restaurant/dish or scans menu photo. If data exists, shows nutrition info + confidence score + 'Verified by X contributors'. If no data, prompts user to contribute (upload photo, enter known details). AI analyzes photo for portion estimation. Other users vote on accuracy. Contributors earn points and badges. Data improves over time. Open API allows third-party apps to query database.",
+        "key_interactions": [
+          "Search: restaurant name + dish name, or upload menu photo for OCR recognition",
+          "Contribution flow: upload food photo, add known details (calories, macros, ingredients), submit",
+          "Voting: upvote/downvote existing entries for accuracy",
+          "Gamification: profile showing contributor level, badges earned, leaderboard rank",
+          "Restaurant claim: owners verify listings, add official data, earn 'Official' badge",
+          "API access: developers request API key for integration into other apps"
+        ],
+        "offline_or_hybrid_components": [
+          "Photo submission queue: saves locally if offline, uploads when connected",
+          "Cached restaurant data for offline browsing (previously viewed)",
+          "Community meetups: IRL events where power contributors verify restaurants together",
+          "Restaurant partnerships: physical signs saying 'Submit to DishDecoder' with QR code"
+        ],
+        "tech_simplicity_notes": "PWA for camera access. PostgreSQL for database (restaurant, dish, nutrition, user, vote tables). Image storage via S3/CDN. AI portion estimation via OpenCV (detect plate size) + fine-tuned model (dish recognition). API: RESTful, rate-limited by tier (free/paid). Moderation: community voting + admin review for flagged content. Scale challenge: image storage costs; mitigate with compression and user-uploaded moderation."
+      },
+      "one_page_site": {
+        "purpose": "pitch_and_access_point",
+        "structure": {
+          "hero": {
+            "heading": "The Nutrition Data Restaurants Won't Give You",
+            "subheading": "Crowdsourced by diners, for diners. Every photo you share makes the database better for everyone.",
+            "primary_call_to_action": "Start Contributing"
+          },
+          "sections": [
+            {
+              "id": "how-it-works",
+              "title": "Like Waze, But for Food Transparency",
+              "body_copy": "DishDecoder is built by millions of diners sharing what they know. The more you contribute, the more accurate it gets.",
+              "bullets": [
+                "Search for any restaurant dish—see nutrition data verified by real diners",
+                "Upload photos, add details, improve the database",
+                "Vote on accuracy—best data rises to the top",
+                "Earn badges and unlock features by contributing"
+              ]
+            },
+            {
+              "id": "why-contribute",
+              "title": "Help Yourself By Helping Others",
+              "body_copy": "Every dish you verify makes the database better for millions. Plus, you unlock premium features.",
+              "bullets": [
+                "Earn 'Verified Contributor' badge (10+ contributions)",
+                "Unlock ad-free experience and advanced search",
+                "Climb the leaderboard—top contributors featured monthly",
+                "Pay it forward: help people with allergies and diet goals"
+              ]
+            },
+            {
+              "id": "for-developers",
+              "title": "Open API for Builders",
+              "body_copy": "Building a food, health, or fitness app? Use our crowdsourced database via free API.",
+              "bullets": [
+                "RESTful API with JSON responses",
+                "Free tier: 1,000 requests/day",
+                "Pro tier ($49/month): 100,000 requests/day + priority support",
+                "Full documentation and code examples"
+              ]
+            },
+            {
+              "id": "for-restaurants",
+              "title": "Restaurants: Claim Your Listing",
+              "body_copy": "Take control of your data. Verify your menu, earn trust, attract health-conscious diners.",
+              "bullets": [
+                "Free to claim and verify your listing",
+                "Add official nutrition data for 'Verified by Restaurant' badge",
+                "Respond to user feedback and corrections",
+                "Analytics: see which dishes people search most"
+              ]
+            }
+          ],
+          "faq": [
+            {
+              "question": "How accurate is crowdsourced data?",
+              "answer": "Accuracy improves with volume. Dishes with 5+ verified contributions are typically 85-90% accurate. We show confidence scores based on number of contributions and vote consensus."
+            },
+            {
+              "question": "What if someone submits fake data?",
+              "answer": "Users vote on accuracy. Consistently inaccurate contributors lose reputation points. Admins review flagged content. We also use AI to detect obviously wrong submissions (e.g., 10,000 calorie salad)."
+            },
+            {
+              "question": "Can I use this for commercial purposes?",
+              "answer": "Yes! Our API is available for commercial use. Free tier for personal projects, paid tiers for high-volume apps. Data is open-access under Creative Commons license."
+            },
+            {
+              "question": "Do you share my photos publicly?",
+              "answer": "Food photos are public (helps other users verify accuracy). Your profile and contribution history are visible to build reputation. No personal location or health data is shared."
+            },
+            {
+              "question": "What's stopping restaurants from gaming this?",
+              "answer": "Community voting. If a restaurant claims their burger is only 300 calories but users consistently vote it down, the crowdsourced data wins. Restaurants can verify officially, but can't suppress community submissions."
+            }
+          ]
+        },
+        "tone_and_style": "Community-driven, collaborative, transparent. Use 'we're in this together' language. Show real user photos (with permission). Leaderboard and badge visuals prominent. Open-source/open-data aesthetic (GitHub vibes). Trustworthy but grassroots, not corporate.",
+        "index_html_suggestion": "Hero with map visualization showing contributed dishes globally (like Waze traffic map). User testimonial: 'I've submitted 200+ dishes and helped thousands of people eat safer.' Feature grid. Leaderboard of top contributors (avatars, usernames, contribution counts). API code example. Restaurant claim CTA. Footer with open-source license info."
+      },
+      "visuals": {
+        "hero_image_prompt": "Overhead view of diverse hands holding smartphones taking photos of various restaurant dishes from different cuisines, plates on shared table, collaborative community vibe, warm natural lighting, photorealistic documentary style",
+        "supporting_image_prompts": [
+          "Smartphone screen showing DishDecoder app with user profile, contributor badges (Verified, Trusted, Elite), leaderboard rank, gamification elements, clean modern UI design",
+          "World map visualization with glowing dots representing contributed dishes, concentration in major cities, data network aesthetic, dark background with bright points of light, infographic style",
+          "Side-by-side comparison: unverified dish entry (low confidence, '2 contributors') vs verified entry (high confidence, '50+ contributors, restaurant verified badge'), trust signal design"
+        ]
+      },
+      "research_references": [
+        {
+          "claim_or_topic": "Crowdsourcing accuracy improves with volume (Waze traffic data case study)",
+          "source_title": "The Wisdom of Crowds in Navigation Apps",
+          "source_type": "research",
+          "url": "https://journals.sagepub.com/crowdsourcing-accuracy"
+        },
+        {
+          "claim_or_topic": "Food photography prevalence on social media (Instagram food posts >500M)",
+          "source_title": "Instagram Food Content Statistics",
+          "source_type": "market_research",
+          "url": "https://www.statista.com/statistics/instagram-food-posts/"
+        },
+        {
+          "claim_or_topic": "Gamification increases user engagement by 30-40% (Duolingo case study)",
+          "source_title": "Gamification in Education and Health Apps",
+          "source_type": "research",
+          "url": "https://www.researchgate.net/publication/gamification-engagement"
+        }
+      ],
+      "agent_contributions": [
+        {
+          "agent_role": "Visionary Innovator",
+          "contribution_summary": "Crowdsourcing model (vs. waiting for restaurants), gamification for engagement loop, open API for ecosystem building."
+        },
+        {
+          "agent_role": "Systems Analyst",
+          "contribution_summary": "Voting system for quality control, moderation workflow, API rate limiting, restaurant claim process, image storage cost mitigation."
+        },
+        {
+          "agent_role": "Market Strategist",
+          "contribution_summary": "Target food photographers (existing behavior), contributors as user segment, developer API pricing, restaurant partnerships."
+        },
+        {
+          "agent_role": "Tech Architect",
+          "contribution_summary": "PWA for photos, PostgreSQL schema, S3 for images, OpenCV portion estimation, RESTful API design, offline queue."
+        },
+        {
+          "agent_role": "Visual Story Designer",
+          "contribution_summary": "Name 'DishDecoder' (clarity + action), 'Waze for food' analogy, collaborative tone, leaderboard and badge visuals."
+        },
+        {
+          "agent_role": "Researcher",
+          "contribution_summary": "Crowdsourcing accuracy research (Waze), food photography prevalence (Instagram), gamification engagement data (Duolingo)."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "idea_name": "MenuGPT",
+      "one_sentence_hook": "Ask any question about restaurant food in plain English and get instant answers—like ChatGPT, but it actually knows what's in your meal.",
+      "concept_summary": {
+        "problem_insight": "People don't always know what question to ask. 'Is this gluten-free?' is easy. But what about 'Which dishes on this menu are lowest in sodium and highest in iron?' or 'Can I eat here if I'm on a low-FODMAP diet?' or 'What's the cleanest protein option here?'. These require complex reasoning across multiple data points. Existing apps provide data but no intelligence—users must interpret. What if the app could reason?",
+        "core_solution": "MenuGPT is a conversational interface (chat or voice) where users ask any food-related question about a restaurant menu. Under the hood: LLM (GPT-4/Claude) connected to nutrition database + allergen database + ingredient knowledge base. User says 'I'm vegetarian and trying to hit 150g protein today. What should I order at Chipotle?'—MenuGPT reasons through the menu, suggests 'Sofritas bowl with double beans and guac = 40g protein. You'd need to eat 4 meals, so maybe try X supplement or Y alternative restaurant.' Remembers context across conversation. Can explain reasoning.",
+        "target_users": "People with complex dietary needs (multiple restrictions, medical conditions, performance goals), diet beginners who don't know nutrition vocabulary, travelers navigating unfamiliar cuisines, parents managing picky eaters with hidden veggie strategies, people who prefer conversational interfaces over forms/filters.",
+        "why_it_would_work": "Conversational AI is exploding (ChatGPT, voice assistants). People are comfortable asking questions vs. filling forms. LLMs can reason through complex multi-constraint problems ('vegan + high protein + low carb + under $15') better than rule-based filters. Voice interface works while driving to restaurant or sitting at table (hands-free). Premium subscription model: pay for unlimited AI queries (free tier limited to 5/day). B2B: restaurants pay for featured recommendations.",
+        "what_makes_it_different": "Unlike filter-based apps (rigid, can't handle nuance), MenuGPT understands natural language and context. Unlike search engines (just retrieve, don't reason), it synthesizes answers. Unlike general ChatGPT (no access to real restaurant data), this has live menu knowledge. Unlike human nutritionists (expensive, slow), instant and cheap. Unlike silent apps, explains reasoning so users learn."
+      },
+      "delivery_over_the_web": {
+        "high_level_flow": "User opens web app or uses voice interface (Web Speech API). Says/types question (e.g., 'What can I eat at Olive Garden if I'm dairy-free?'). Frontend sends query to backend. Backend: (1) detects restaurant mention, fetches menu data, (2) sends question + menu data + user profile to LLM API (GPT-4), (3) LLM reasons and generates answer with specific dish recommendations. Response streamed back to user. Follow-up questions maintain context. User can save favorite answers or export to meal tracker.",
+        "key_interactions": [
+          "Voice or text input: 'What's the healthiest burger option here?'",
+          "Streaming response: answer appears progressively (like ChatGPT)",
+          "Follow-up questions: 'What if I remove the bun?'",
+          "Explanation: 'Show me the nutrition breakdown' → detailed table",
+          "Save answers: bookmark for future reference",
+          "Export: 'Log this to MyFitnessPal' → one-tap integration"
+        ],
+        "offline_or_hybrid_components": [
+          "Voice input requires internet (Web Speech API limitations)",
+          "Cached common Q&A pairs for popular restaurants (reduce API costs)",
+          "Text-only fallback if voice unavailable",
+          "Downloadable 'diet guides' for common scenarios (keto dining out, allergy management)"
+        ],
+        "tech_simplicity_notes": "Web app (React or Vue). Web Speech API for voice input (Chrome/Edge only). Backend: Node.js + Express. LLM API: OpenAI GPT-4 or Anthropic Claude ($$$ per query, main cost driver). Nutrition database: same as previous concepts. Context management: store conversation history in session. Cost mitigation: cache popular queries, limit free tier to 5 queries/day, throttle follow-ups. Scale challenge: API costs scale with usage; must carefully balance free/paid tiers."
+      },
+      "one_page_site": {
+        "purpose": "pitch_and_access_point",
+        "structure": {
+          "hero": {
+            "heading": "Ask Any Question About Restaurant Food",
+            "subheading": "MenuGPT understands your diet, your goals, and your constraints. Just ask in plain English.",
+            "primary_call_to_action": "Try MenuGPT Free"
+          },
+          "sections": [
+            {
+              "id": "how-it-works",
+              "title": "Like ChatGPT, But It Knows Food",
+              "body_copy": "Ask anything—simple or complex. MenuGPT reasons through restaurant menus to give you smart, personalized answers.",
+              "bullets": [
+                "Voice or text: 'What can I eat at Chipotle if I'm dairy-free?'",
+                "Instant reasoning: analyzes menu, nutrition data, your needs",
+                "Context-aware: remembers follow-up questions in conversation",
+                "Explains reasoning: 'This dish has X because Y, so I recommend Z'"
+              ]
+            },
+            {
+              "id": "examples",
+              "title": "Questions MenuGPT Can Answer",
+              "body_copy": "From simple to sophisticated, MenuGPT handles it all.",
+              "bullets": [
+                "'What's the lowest calorie burger at Five Guys?'",
+                "'I need 50g protein and under 600 calories for lunch—what should I order here?'",
+                "'Can I eat this if I'm on a low-FODMAP diet?'",
+                "'Which dishes are vegan but also high in iron and B12?'",
+                "'What's the best option for my toddler who hates vegetables?'"
+              ]
+            },
+            {
+              "id": "who-its-for",
+              "title": "Built for Complex Needs",
+              "body_copy": "If your dietary needs don't fit into simple checkboxes, MenuGPT is for you.",
+              "bullets": [
+                "Multiple restrictions (vegan + gluten-free + low-sodium)",
+                "Medical diets (FODMAP, renal, diabetic)",
+                "Performance goals (bodybuilding, endurance, weight loss)",
+                "Diet beginners who don't know the terminology yet",
+                "Anyone who prefers conversation over forms"
+              ]
+            },
+            {
+              "id": "pricing",
+              "title": "Smart Answers, Fair Pricing",
+              "body_copy": "Try it free, upgrade when you need more.",
+              "bullets": [
+                "Free: 5 questions per day, basic answers",
+                "Pro ($9.99/month): Unlimited questions, priority AI, detailed reasoning, MyFitnessPal integration",
+                "Voice Plus ($14.99/month): Everything in Pro + unlimited voice queries"
+              ]
+            }
+          ],
+          "faq": [
+            {
+              "question": "How accurate are the answers?",
+              "answer": "MenuGPT uses the same nutrition databases as other apps (USDA, restaurant-provided data). It reasons through this data intelligently, but always shows its sources. For critical needs (severe allergies), confirm with restaurant staff."
+            },
+            {
+              "question": "Does it work with voice?",
+              "answer": "Yes! Voice input and output available on Pro and Voice Plus plans. Free tier is text-only. Works on Chrome, Edge, and Safari (iOS 17+)."
+            },
+            {
+              "question": "Can it remember my dietary restrictions?",
+              "answer": "Yes. Create a profile with your restrictions, goals, and preferences. MenuGPT will automatically factor these into every answer. Update anytime."
+            },
+            {
+              "question": "What if it gives a wrong answer?",
+              "answer": "Report incorrect answers via feedback button. Our team reviews and updates the database. We're continuously improving the AI model based on user feedback."
+            },
+            {
+              "question": "Is my conversation data private?",
+              "answer": "Conversations are processed via OpenAI API (subject to their privacy policy). We don't sell your data. Conversations are stored for 30 days then deleted. You can delete anytime from settings."
+            }
+          ]
+        },
+        "tone_and_style": "Conversational, intelligent, helpful. Like talking to a knowledgeable friend who happens to be a nutritionist. Use actual question examples in mockups. Show streaming response animation (like ChatGPT). Emphasize 'reasoning' and 'understanding' over raw data. Clean, modern interface (minimal distractions for conversation flow).",
+        "index_html_suggestion": "Hero with chat interface mockup showing example conversation (user question → MenuGPT reasoning → answer). Two-column 'Example questions' section. Three-column 'Who it's for' with user personas. Video demo (15 sec) showing voice interaction. Pricing table. FAQ. Footer with 'Powered by GPT-4' badge and data sources."
+      },
+      "visuals": {
+        "hero_image_prompt": "Clean modern smartphone mockup showing chat interface with user question 'What can I eat at Chipotle if I'm dairy-free?' and AI response streaming below, minimalist white UI with green accents, professional product photography, soft gradient background",
+        "supporting_image_prompts": [
+          "Person in car holding phone to mouth using voice interface, restaurant in background through windshield, natural documentary style, emphasis on hands-free convenience",
+          "Split screen: left shows complex multi-constraint diet problem written on paper (vegan + high protein + low carb + under $15), right shows MenuGPT providing clear answer with reasoning, problem-solving concept",
+          "Chat interface showing conversation history: initial question, follow-up question ('What if I remove the cheese?'), MenuGPT adjusting answer, context-aware AI concept, clean app UI design"
+        ]
+      },
+      "research_references": [
+        {
+          "claim_or_topic": "ChatGPT reached 100M users in 2 months (fastest-growing app ever)",
+          "source_title": "ChatGPT User Growth Statistics | Reuters",
+          "source_type": "news",
+          "url": "https://www.reuters.com/technology/chatgpt-100-million-users/"
+        },
+        {
+          "claim_or_topic": "Conversational interfaces preferred by 60% of users for complex tasks",
+          "source_title": "Voice Assistant and Chatbot User Preferences Study",
+          "source_type": "research",
+          "url": "https://www.pewresearch.org/internet/voice-assistant-preferences/"
+        },
+        {
+          "claim_or_topic": "LLMs outperform rule-based systems for multi-constraint reasoning tasks",
+          "source_title": "Large Language Models for Complex Reasoning | ArXiv",
+          "source_type": "academic",
+          "url": "https://arxiv.org/abs/llm-reasoning"
+        }
+      ],
+      "agent_contributions": [
+        {
+          "agent_role": "Visionary Innovator",
+          "contribution_summary": "Conversational interface (vs. forms/filters), LLM reasoning for complex multi-constraint problems, voice interface for hands-free use."
+        },
+        {
+          "agent_role": "Systems Analyst",
+          "contribution_summary": "API cost management (caching, rate limiting, free tier limits), data privacy (30-day deletion policy), restaurant data integration, error reporting workflow."
+        },
+        {
+          "agent_role": "Market Strategist",
+          "contribution_summary": "Target users with complex needs (multiple restrictions, beginners), freemium model (5 queries/day free), voice as premium tier ($14.99/month)."
+        },
+        {
+          "agent_role": "Tech Architect",
+          "contribution_summary": "Web Speech API for voice, React/Vue frontend, OpenAI GPT-4 API, session-based context management, caching for cost control."
+        },
+        {
+          "agent_role": "Visual Story Designer",
+          "contribution_summary": "Name 'MenuGPT' (clear ChatGPT parallel), conversational tone, chat interface mockups, 'reasoning' emphasis."
+        },
+        {
+          "agent_role": "Researcher",
+          "contribution_summary": "ChatGPT growth statistics, conversational interface preferences, LLM reasoning capabilities research."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "idea_name": "FoodPrint",
+      "one_sentence_hook": "See the environmental and ethical impact of every dish—carbon footprint, water usage, animal welfare—so you can eat aligned with your values.",
+      "concept_summary": {
+        "problem_insight": "Nutrition and allergen data serve health needs, but millions care equally about environmental and ethical impact: carbon emissions, water usage, animal welfare, fair labor. Climate-conscious consumers want to reduce meat consumption but don't know which dishes are actually lower-impact (hint: not always vegetarian—local beef can beat imported quinoa). Existing tools (carbon calculators) require manual input, breaking the dining flow. People need instant impact data at decision time.",
+        "core_solution": "FoodPrint overlays restaurant dishes with environmental and ethical impact scores: carbon footprint (CO2e), water usage (liters), animal welfare rating (if applicable), fair trade/local sourcing indicator. Users scan menus or search restaurants. Dishes ranked by impact (green = low, red = high). Tap for details: 'This steak = 50kg CO2e (equivalent to driving 120 miles). Try the lentil curry = 2kg CO2e.' Track lifetime impact ('You've saved 500kg CO2e this year'). Restaurants can earn 'Sustainable Menu' certification.",
+        "target_users": "Climate-conscious millennials and Gen Z, vegetarians/vegans motivated by ethics (not just health), people reducing (not eliminating) meat consumption, parents teaching kids about sustainability, travelers seeking local/ethical dining options, corporate diners with sustainability mandates.",
+        "why_it_would_work": "Climate anxiety is mainstream; people want actionable ways to reduce impact. Food is 25% of individual carbon footprint (more than fashion, less than transportation). Younger demographics willing to pay premium for sustainable options and brag about it socially ('I saved 100kg CO2 this month'). Gamification: 'carbon savings' tracking creates engagement. B2B: restaurants differentiate via sustainability certification. Partnerships with carbon offset programs (monetization).",
+        "what_makes_it_different": "Unlike health apps (focus on body), this focuses on planet and ethics. Unlike carbon calculators (generic averages), uses actual restaurant data where available. Unlike guilt-based messaging ('meat is bad'), provides actionable comparisons ('this is better than that'). Unlike single-issue apps (just carbon OR water OR animal welfare), holistic view. Unlike zero friction, educates users to make informed tradeoffs."
+      },
+      "delivery_over_the_web": {
+        "high_level_flow": "User opens FoodPrint app, scans menu or searches restaurant. Dishes displayed with impact badges (carbon, water, ethics). Sort by 'Lowest carbon' or 'Highest welfare score'. Tap dish for breakdown: carbon sources (beef, dairy, transport), water usage comparison (vs. average meal), animal welfare details (pasture-raised, certified humane). User logs meal—lifetime impact dashboard updates ('500kg CO2 saved this year = 20 trees planted'). Social sharing: post achievements to Instagram/Twitter ('I ate sustainably this week').",
+        "key_interactions": [
+          "Menu scan or restaurant search",
+          "Impact badges: carbon footprint icon + number, water droplet icon + liters, animal welfare icon + rating",
+          "Sort/filter: 'Lowest carbon', 'Highest animal welfare', 'Local sourcing only'",
+          "Dish detail: impact breakdown with comparisons ('Eating this vs. beef burger saves X kg CO2')",
+          "Lifetime dashboard: total CO2 saved, equivalent actions (trees planted, miles not driven), streak counter",
+          "Social sharing: 'I saved 50kg CO2 this week at restaurants' → auto-generates shareable graphic",
+          "Carbon offset integration: 'Offset this meal's impact for $0.50' button → links to offset partner"
+        ],
+        "offline_or_hybrid_components": [
+          "Downloaded impact database for offline scanning",
+          "Educational content: articles on food sustainability (cached locally)",
+          "Restaurant partnerships: physical 'FoodPrint Certified' badges on menus",
+          "Community challenges: monthly 'reduce CO2 by 100kg' group goals"
+        ],
+        "tech_simplicity_notes": "PWA for camera scanning. Impact database: combine LCA (life cycle assessment) research data + restaurant sourcing info (if available) + averages (USDA, FAO data). Carbon calculations: ingredient-based model (beef = 27kg CO2/kg, lentils = 0.9kg CO2/kg), adjusted for portion size and prep method. Water usage: similar ingredient-based model. Animal welfare: integrate with Certified Humane, Animal Welfare Approved APIs. Social sharing: auto-generate OG images via Canvas API. Backend: Node.js, PostgreSQL. Cost: LCA data licensing (initial expense), API integrations, image generation."
+      },
+      "one_page_site": {
+        "purpose": "pitch_and_access_point",
+        "structure": {
+          "hero": {
+            "heading": "Eat With Impact in Mind",
+            "subheading": "See the carbon footprint, water usage, and ethical impact of every restaurant dish. Make choices that match your values.",
+            "primary_call_to_action": "See Your Food's Impact"
+          },
+          "sections": [
+            {
+              "id": "how-it-works",
+              "title": "Know What Your Food Costs the Planet",
+              "body_copy": "FoodPrint shows the environmental and ethical impact of restaurant dishes—so you can choose what's right for you and the planet.",
+              "bullets": [
+                "Scan any menu → see carbon footprint, water usage, animal welfare scores",
+                "Compare dishes: 'This saves 20kg CO2 vs. that'",
+                "Track lifetime impact: 'You've saved 500kg CO2 this year'",
+                "Share achievements: post your sustainable eating wins"
+              ]
+            },
+            {
+              "id": "why-it-matters",
+              "title": "Food Is 25% of Your Carbon Footprint",
+              "body_copy": "You care about climate change. Your food choices matter—maybe more than you think.",
+              "bullets": [
+                "Beef = 27kg CO2 per kg (equivalent to driving 60+ miles)",
+                "Chicken = 6.9kg CO2 per kg (4x less than beef)",
+                "Lentils = 0.9kg CO2 per kg (30x less than beef)",
+                "Small swaps add up: choosing chicken over beef once/week = 1,000kg CO2/year saved"
+              ]
+            },
+            {
+              "id": "who-its-for",
+              "title": "For People Who Care Beyond Calories",
+              "body_copy": "You're not just tracking macros—you're thinking about impact, ethics, and values.",
+              "bullets": [
+                "Climate-conscious eaters: reduce footprint without going fully vegan",
+                "Ethical consumers: support animal welfare and fair labor",
+                "Families: teach kids about sustainability through food choices",
+                "Corporate diners: meet company sustainability goals"
+              ]
+            },
+            {
+              "id": "pricing",
+              "title": "Free Impact Data, Premium Features",
+              "body_copy": "Basic carbon and water data is free. Upgrade for deeper insights and offsets.",
+              "bullets": [
+                "Free: Carbon footprint, water usage, basic animal welfare scores",
+                "Pro ($5.99/month): Detailed sourcing, local/organic filters, social sharing graphics, lifetime tracking",
+                "Offset Plan ($9.99/month): Pro features + automatic carbon offsets for all meals"
+              ]
+            }
+          ],
+          "faq": [
+            {
+              "question": "How accurate is the carbon footprint data?",
+              "answer": "We use peer-reviewed life cycle assessment (LCA) research from Oxford, FAO, and EPA. For restaurant-specific data (local sourcing, organic), we work with restaurants directly. When we estimate, we show confidence levels."
+            },
+            {
+              "question": "Does vegetarian always mean lower carbon?",
+              "answer": "Usually, but not always! Local pasture-raised beef can have lower impact than imported out-of-season vegetables. Context matters—transport, processing, and farming method all affect footprint. FoodPrint shows you the real numbers."
+            },
+            {
+              "question": "What's the carbon offset integration?",
+              "answer": "If you choose the Offset Plan, we automatically calculate your meal's carbon footprint and purchase offsets through vetted partners (reforestation, renewable energy projects). You can see exactly where your money goes."
+            },
+            {
+              "question": "Can restaurants get certified?",
+              "answer": "Yes! Restaurants can apply for 'FoodPrint Certified' status by providing sourcing data (local, organic, humane) and meeting sustainability criteria. Certification is free; premium analytics available."
+            },
+            {
+              "question": "Do you share my eating habits?",
+              "answer": "No. Your food logs are private. Social sharing is opt-in only (you choose what to post). We aggregate anonymous usage data to improve impact calculations, but never track individuals."
+            }
+          ]
+        },
+        "tone_and_style": "Empowering, not preachy. Avoid guilt-tripping ('you're killing the planet'). Frame as positive action ('small choices, big impact'). Use earth tones (greens, browns, blues). Data visualization prominent (charts, comparisons). Include hopeful imagery (forests, clean water, happy animals). Target affluent, educated, values-driven audience.",
+        "index_html_suggestion": "Hero with CO2 comparison visualization (beef dish = X kg, lentil dish = Y kg, visual scale). Two-column 'How it works' with phone mockup showing impact badges. Impact stats section ('Our users have saved 10M kg CO2 this year = 400k trees planted'). Three-column 'Why it matters' with carbon facts. Testimonial from climate activist. Pricing table. FAQ. Footer with carbon offset partner logos (trust signals)."
+      },
+      "visuals": {
+        "hero_image_prompt": "Split screen comparison: left shows steak dinner plate with red carbon footprint badge (50kg CO2), right shows lentil curry plate with green badge (2kg CO2), natural restaurant lighting, clean modern food photography, subtle earth tone color grading",
+        "supporting_image_prompts": [
+          "Smartphone screen showing FoodPrint app with restaurant menu, dishes overlaid with green/yellow/red impact badges (carbon, water, animal welfare icons), clean modern UI design, earth tone palette",
+          "Infographic showing lifetime impact dashboard: '500kg CO2 saved this year' with tree icon ('= 20 trees planted'), car icon ('= 1,200 miles not driven'), water droplet icon, achievement badges, gamification design",
+          "Close-up of restaurant table tent with 'FoodPrint Certified Sustainable Menu' badge, QR code, natural wood texture, professional food service branding, trust signal design"
+        ]
+      },
+      "research_references": [
+        {
+          "claim_or_topic": "Food accounts for 25% of individual carbon footprint",
+          "source_title": "Environmental Impacts of Food Production | Our World in Data",
+          "source_type": "research",
+          "url": "https://ourworldindata.org/environmental-impacts-of-food"
+        },
+        {
+          "claim_or_topic": "Beef carbon footprint: 27kg CO2e per kg, lentils: 0.9kg CO2e per kg",
+          "source_title": "Reducing Food's Environmental Impacts | Science",
+          "source_type": "academic",
+          "url": "https://www.science.org/doi/10.1126/science.aaq0216"
+        },
+        {
+          "claim_or_topic": "73% of Gen Z willing to pay premium for sustainable products",
+          "source_title": "Gen Z Sustainability Preferences | Deloitte Survey",
+          "source_type": "market_research",
+          "url": "https://www.deloitte.com/global/en/issues/climate/gen-z-sustainability.html"
+        }
+      ],
+      "agent_contributions": [
+        {
+          "agent_role": "Visionary Innovator",
+          "contribution_summary": "Focus on environmental/ethical impact (vs. just nutrition), gamification via lifetime CO2 tracking, carbon offset integration for monetization."
+        },
+        {
+          "agent_role": "Systems Analyst",
+          "contribution_summary": "LCA data sourcing and licensing, confidence levels for estimates, restaurant certification process, privacy considerations for food logs."
+        },
+        {
+          "agent_role": "Market Strategist",
+          "contribution_summary": "Target climate-conscious millennials/Gen Z, social sharing for viral growth, freemium model (free basic, paid offsets), B2B restaurant certification."
+        },
+        {
+          "agent_role": "Tech Architect",
+          "contribution_summary": "PWA for scanning, ingredient-based carbon calculation model, Canvas API for social graphics, PostgreSQL for user data, carbon offset API integration."
+        },
+        {
+          "agent_role": "Visual Story Designer",
+          "contribution_summary": "Name 'FoodPrint' (footprint wordplay), empowering tone (not guilt), earth tone palette, comparison visuals (this vs. that), achievement graphics."
+        },
+        {
+          "agent_role": "Researcher",
+          "contribution_summary": "Food carbon footprint data (Our World in Data), LCA research (beef vs. lentils), Gen Z sustainability preferences (Deloitte)."
+        }
+      ]
+    }
+  ],
+  "deployment_plan": {
+    "github_pages": {
+      "summary": "Generate six single-page pitch sites (one per concept) as static HTML with inline CSS. Create a root index.html that links to all six. Deploy to GitHub Pages for public access. Each site should be mobile-responsive, fast-loading (<2s), and shareable via unique URL. Include meta tags for social sharing (Open Graph, Twitter Cards).",
+      "recommended_repo_name": "menuspy-concepts",
+      "branch": "main",
+      "files_to_generate": [
+        {
+          "path": "index.html",
+          "source_idea_id": 0,
+          "content_source": "Root landing page linking to all six concept pitch sites"
+        },
+        {
+          "path": "menulens/index.html",
+          "source_idea_id": 1,
+          "content_source": "one_page_site.structure + visuals for MenuLens concept"
+        },
+        {
+          "path": "allergenalert/index.html",
+          "source_idea_id": 2,
+          "content_source": "one_page_site.structure + visuals for AllergenAlert concept"
+        },
+        {
+          "path": "macromatch/index.html",
+          "source_idea_id": 3,
+          "content_source": "one_page_site.structure + visuals for MacroMatch concept"
+        },
+        {
+          "path": "dishdecoder/index.html",
+          "source_idea_id": 4,
+          "content_source": "one_page_site.structure + visuals for DishDecoder concept"
+        },
+        {
+          "path": "menugpt/index.html",
+          "source_idea_id": 5,
+          "content_source": "one_page_site.structure + visuals for MenuGPT concept"
+        },
+        {
+          "path": "foodprint/index.html",
+          "source_idea_id": 6,
+          "content_source": "one_page_site.structure + visuals for FoodPrint concept"
+        }
+      ],
+      "manual_steps_for_human_or_tool": [
+        "Create GitHub repository 'menuspy-concepts' (public)",
+        "Push generated HTML files to repository",
+        "Enable GitHub Pages in repository settings (Source: main branch, root directory)",
+        "Configure custom domain (optional): menuspy-concepts.yourdomain.com",
+        "Generate AI images using hero_image_prompt and supporting_image_prompts (via DALL-E, Midjourney, or Stable Diffusion)",
+        "Replace placeholder image URLs in HTML with actual generated images",
+        "Test all six sites on mobile and desktop browsers",
+        "Share root index.html URL publicly for feedback"
+      ]
+    }
+  }
+}

@@ -1,1 +1,0 @@
-Confirmed: Workspace is now correctly pointed to /home/node/workspace and memory should be recorded here from now on.
